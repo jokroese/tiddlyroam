@@ -16,7 +16,6 @@ TiddlyRoam is a [TiddlyWiki](https://tiddlywiki.com/) with bi-directional links 
 
 This means when you are on page 'Example Page', you can see not just all the pages that 'Example Page' links *to*, but also all pages that link to *it*. This leads to what Roam calls 'networked thought'. It really is something that you need to experience to appreciate.
 
-
 ### Graph maps
 
 This helps you visualise all the pages you have made and how they link together.
@@ -26,6 +25,12 @@ This helps you visualise all the pages you have made and how they link together.
 1. Download [tiddlyroam.html](https://github.com/joekroese/tiddlyroam/releases/download/v1.0/tiddlyroam.html)
 1. Download [TiddlyDesktop](https://github.com/Jermolene/TiddlyDesktop/releases)
 1. Drag tiddlyroam.html into TiddlyDesktop
+
+## Examples of TiddlyRoam
+
+- [Citizense](https://citizense.org) use TiddlyRoam for their open access [company wiki](https://citizense.org/wiki).
+
+If you have examples of your wikis using TiddlyRoam please share them [here](https://github.com/joekroese/tiddlyroam/issues) and I will add them to this list!
 
 ## Thanks
 
