@@ -22,7 +22,7 @@ This helps you visualise all the pages you have made and how they link together.
 
 ## Quickstart
 
-1. Download [tiddlyroam.html](https://github.com/joekroese/tiddlyroam/releases/download/v1.0/tiddlyroam.html)
+1. Download [tiddlyroam.html](https://github.com/joekroese/tiddlyroam/releases/download/v1.1/tiddlyroam.html)
 1. Download [TiddlyDesktop](https://github.com/Jermolene/TiddlyDesktop/releases)
 1. Drag tiddlyroam.html into TiddlyDesktop
 
