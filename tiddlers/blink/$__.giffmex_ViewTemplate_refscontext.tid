@@ -1,0 +1,21 @@
+caption: Highlights in context
+created: 20200102141715979
+modified: 20200604201900911
+tags: $:/giffmex/blinks $:/giffmex/refs $:/giffmex/stroll
+title: $:/.giffmex/ViewTemplate/refscontext
+type: text/vnd.tiddlywiki
+
+<span class="viewtemplatebigtext">
+
+<$reveal type="nomatch" stateTitle=<<folded-state>> text="hide" tag="div" retain="yes" animate="yes">
+
+<hr>
+
+<$vars searchme=<<currentTiddler>> searchspx={{{ [<currentTiddler>escaperegexp[]]}}} >
+
+<$list filter="[!is[system]all[current]backlinks[]!tag[outlines]!tag[hide]sort[title]] -[is[current]]"><$link><$view field="title"/></$link><span class="indent1"><$link><span class="graybox"><$context term=<<searchme>> /></span></$link></span></$list>
+</$vars>
+
+</$reveal>
+
+</span>

@@ -1,0 +1,102 @@
+/*BOXES*/
+
+html body.tc-body .bluebox {display:block;background-color:#eef;padding:5px;padding-left:20px;padding-top:10px;margin-top:5px;margin-bottom:5px;width:95%;color:#000;}
+
+html body.tc-body .graybox {display:block;background-color:#eee;padding:5px;padding-left:20px;padding-top:10px;margin-top:5px;margin-bottom:5px;width:95%;color:#000;}
+
+body p {<<colour foreground>>;}
+code {color: #b0a;background-color:#eee;}
+
+/*TIGHT NOTES*/
+
+html body.tc-body h1, html body.tc-body h2, html body.tc-body h3, html body.tc-body h4 { margin-top: 0.3em; margin-bottom: 0.3em; }
+
+/*FONT SUBTITLES*/
+
+.serif {font-family: 'Arial', sans-serif; color: <<colour tiddler-editor-border>>font-size:10pt;}
+
+html body.tc-body .serif a.tc-tiddlylink-external {font-family: 'Arial', sans-serif;font-size:12pt; line-height:normal;font-weight:normal;color:#666;}
+
+/*FONT STUFF (colors)*/
+
+html body.tc-body .lightgraybk {background:#eee;padding:1px 4px px 4px;margin-bottom:2px;font-family:'Arial', sans-serif;}
+
+.red {color:red;}
+html body.tc-body .blue a {color:blue;}
+
+/*FONT STUFF SOURCES*/
+
+html body.tc-body .source {color:#777;font-size:10pt;}
+
+/* ICON COLORS
+
+html body.tc-body .tc-image-edit-button {stroke: white;fill:#555;}
+html body.tc-body .tc-image-chevron-up {stroke: white;fill:#ccc;}
+html body.tc-body .tc-image-chevron-down {stroke: white;fill:#ccc;}
+html body.tc-body .tc-image-fold-button {stroke: white;fill:#ccc;}
+html body.tc-body .tc-image-close-button {stroke: white;fill:#555;}
+html body.tc-body .tc-image-unfold-button {stroke: white;fill:#ccc;}
+html body.tc-body .tc-image-preview-open {stroke: white;fill:#f29;font-size:150%;}
+html body.tc-body .tc-image-delete-button {stroke: white;fill:#ff2222;}
+html body.tc-body .tc-image-cancel-button {stroke: white;fill:#ffdd55;}
+html body.tc-body .tc-image-done-button {stroke: white;fill:#094;} */
+
+/*INDENTING*/
+
+html body.tc-body .indent1 {margin-left:1.5em;display:block;}
+
+/*LINKS*/
+
+html body.tc-body a.tc-tiddlylink {text-decoration: none;font-style: normal;font-weight: normal;} 
+html body.tc-body a.tc-tiddlylink-external {text-decoration: none;font-weight: normal;}
+html body.tc-body a.tc-tiddlylink-visited {text-decoration: none;font-weight: normal;}
+
+html body.tc-body .source a.tc-tiddlylink-external {font-weight: normal;font-size:10pt;}
+
+/*LISTS BASIC*/
+
+html body.tc-body ul li {color: <<colour foreground>>;}
+html body.tc-body ol li {color:<<colour foreground>>;}
+
+/*TIDDLER TITLES*/
+
+.tc-tiddler-missing .tc-title { font-style: normal; font-weight: bold; }
+
+/*VIEWTEMPLATE FONT SIZE*/
+
+html body.tc-body .viewtemplatebigtext {font-size:110%;}
+
+/*HIDE SECTIONS FOR PRINTING*/
+
+@media print {#tc-page-background {display: none ! important;}} 
+@media print {.tc-tags-wrapper {display: none ! important;}} 
+
+ @media print { body.tc-body {background-color: transparent;}}
+ @media print {.tc-image-chevron-up {display: none ! important;}} 
+ @media print {.tc-image-chevron-down {display: none ! important;}} 
+ @media print {button.sidebar-toggle {display: none ! important;}} 
+@media print {.hideprint {display: none ! important;}} 
+@media print {.tc-btn-invisible {display: none ! important;}} 
+
+@media print {
+
+.story-river {
+margin: 0;
+padding: 0;
+}
+
+html body.tc-body .tc-tiddler-frame {
+margin: 0;
+border-bottom: 1px solid #fff;
+padding: 5px;}
+
+html body.tc-body a.tc-tiddlylink-external:hover {
+border: 1px solid <<colour tiddler-border>>;
+}
+
+html body.tc-body .tc-tiddler-info {
+padding: 14px 42px 14px 42px;
+background-color: <<colour tiddler-info-background>>;}
+
+}
+}

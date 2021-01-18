@@ -1,0 +1,29 @@
+caption: Full text under sliders
+created: 20200126142157739
+modified: 20200604201902716
+tags: $:/giffmex/stroll $:/giffmex/blinks $:/giffmex/refs $:/tags/ViewTemplate
+title: $:/.giffmex/ViewTemplate/refstranscludecollapse
+type: text/vnd.tiddlywiki
+
+<span class="viewtemplatebigtext">
+
+<$reveal type="nomatch" stateTitle=<<folded-state>> text="hide" tag="div" retain="yes" animate="yes">
+
+<hr>
+
+<$list filter="[!is[system]all[current]backlinks[]!tag[hide]!tag[outlines]sort[title]] -[is[current]]"><$link><$view field="title"/></$link>
+<$reveal type="nomatch" stateTitle="$:/.giffmex/TiddlyBlinkFoldData" stateIndex=<<currentTiddler>> text="show">
+<$button class=<<tv-config-toolbar-class>> setTitle="$:/.giffmex/TiddlyBlinkFoldData" setIndex=<<currentTiddler>> setTo="show">{{$:/core/images/unfold-button}}</$button><br/>
+</$reveal>
+<$reveal type="match" stateTitle="$:/.giffmex/TiddlyBlinkFoldData" stateIndex=<<currentTiddler>> text="show">
+<$button class=<<tv-config-toolbar-class>> setTitle="$:/.giffmex/TiddlyBlinkFoldData" setIndex=<<currentTiddler>> setTo="hide">{{$:/core/images/fold-button}}</$button>
+<span class="indent1">
+<$link><span class="graybox">
+
+<$transclude field="text" mode="block" /></span></$link></span>
+</$reveal>
+</$list>
+
+</$reveal>
+
+</span>

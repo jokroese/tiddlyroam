@@ -1,0 +1,31 @@
+created: 20200418200434193
+modified: 20200604201429213
+tags: $:/giffmex/stroll $:/giffmex/blinks
+title: $:/.giffmex/ui/EditTemplate
+type: text/vnd.tiddlywiki
+
+\define save-tiddler-actions()
+<$action-sendmessage $message="tm-add-tag" $param={{{ [<newTagNameTiddler>get[text]] }}}/>
+<$action-deletetiddler $tiddler=<<newTagNameTiddler>>/>
+<$action-sendmessage $message="tm-add-field" $name={{{ [<newFieldNameTiddler>get[text]] }}} $value={{{ [<newFieldValueTiddler>get[text]] }}}/>
+<$action-deletetiddler $tiddler=<<newFieldNameTiddler>>/>
+<$action-deletetiddler $tiddler=<<newFieldValueTiddler>>/>
+<$action-sendmessage $message="tm-save-tiddler"/>
+<$list filter="[all[current]links[]is[missing]]"><$action-createtiddler $basetitle=<<currentTiddler>>/></$list>
+
+\end
+<div data-tiddler-title=<<currentTiddler>> data-tags={{!!tags}} class={{{ tc-tiddler-frame tc-tiddler-edit-frame [<currentTiddler>is[tiddler]then[tc-tiddler-exists]] [<currentTiddler>is[missing]!is[shadow]then[tc-tiddler-missing]] [<currentTiddler>is[shadow]then[tc-tiddler-exists tc-tiddler-shadow]] [<currentTiddler>is[system]then[tc-tiddler-system]] [{!!class}] [<currentTiddler>tags[]encodeuricomponent[]addprefix[tc-tagged-]] +[join[ ]] }}}>
+<$fieldmangler>
+<$vars storyTiddler=<<currentTiddler>> newTagNameTiddler=<<qualify "$:/temp/NewTagName">> newFieldNameTiddler=<<qualify "$:/temp/NewFieldName">> newFieldValueTiddler=<<qualify "$:/temp/NewFieldValue">>>
+<$keyboard key="((cancel-edit-tiddler))" message="tm-cancel-tiddler">
+<$keyboard key="((save-tiddler))" actions=<<save-tiddler-actions>>>
+<$list filter="[all[shadows+tiddlers]tag[$:/tags/EditTemplate]!has[draft.of]]" variable="listItem">
+<$set name="tv-config-toolbar-class" filter="[<tv-config-toolbar-class>] [<listItem>encodeuricomponent[]addprefix[tc-btn-]]">
+<$transclude tiddler=<<listItem>>/>
+</$set>
+</$list>
+</$keyboard>
+</$keyboard>
+</$vars>
+</$fieldmangler>
+</div>

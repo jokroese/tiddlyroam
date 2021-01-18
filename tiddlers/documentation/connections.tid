@@ -1,0 +1,24 @@
+created: 20200604203229920
+modified: 20200604204610116
+tags: documentation
+title: connections
+tmap.id: 2161002b-c8c5-415d-bd7e-be3f13277001
+type: text/vnd.tiddlywiki
+
+the basis of thinking
+
+To make a connection between this tiddler and another, put two square brackets around the tiddler you want to create. It can be called anything.
+
+# Click on the pen in the top right corner of the tiddler.
+
+# ''Put your tiddler here: ''
+
+# Once made, the font will be bold. This means that the tiddler doesn't yet exist. Click on it.
+
+# Click on the pen on your new tiddler and write something in it.
+
+# Save your tiddler by pressing the tick button.
+
+Good work!
+
+Now let's move to [[customisation]].

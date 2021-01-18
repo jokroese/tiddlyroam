@@ -1,0 +1,18 @@
+caption: Full text
+created: 20200126142157739
+modified: 20200604201429256
+tags: $:/giffmex/stroll $:/giffmex/blinks $:/giffmex/refs
+title: $:/.giffmex/ViewTemplate/refstranscludeclean
+type: text/vnd.tiddlywiki
+
+<span class="viewtemplatebigtext">
+
+<$reveal type="nomatch" stateTitle=<<folded-state>> text="hide" tag="div" retain="yes" animate="yes">
+
+<hr>
+
+<$list filter="[!is[system]all[current]backlinks[]!tag[hide]!tag[outlines]sort[title]] -[is[current]]"><$link><$view field="title"/></$link><span class="indent1"><$link><span class="graybox"><$transclude field="text" mode="block" /></span></$link></span></$list>
+
+</$reveal>
+
+</span>

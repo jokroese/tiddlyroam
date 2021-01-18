@@ -1,0 +1,13 @@
+author: Danielo Rodrigez
+core-version: >=5.1.0
+created: 20200304200213285
+dependents: 
+description: Context search - provides visual highlight of search results
+list: readme
+modified: 20200604201429300
+plugin-type: plugin
+source: https://github.com/danielo515/TW5-contextPlugin
+tags: $:/giffmex/stroll $:/giffmex/blinks
+title: $:/plugins/danielo515/ContextPlugin
+type: application/json
+version: 2.1.0

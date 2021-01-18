@@ -1,0 +1,18 @@
+caption: {{$:/plugins/tiddlywiki/markdown/images/new-markdown-button}} {{$:/language/Buttons/NewMarkdown/Caption}}
+created: 20200604195830730
+description: {{$:/language/Buttons/NewMarkdown/Hint}}
+modified: 20200604195830757
+tags: $:/tags/PageControls
+title: $:/plugins/tiddlywiki/markdown/new-markdown-button
+type: text/vnd.tiddlywiki
+
+\whitespace trim
+<$button tooltip={{$:/language/Buttons/NewMarkdown/Hint}} aria-label={{$:/language/Buttons/NewMarkdown/Caption}} class=<<tv-config-toolbar-class>>>
+<$action-sendmessage $message="tm-new-tiddler" type="text/x-markdown"/>
+<$list filter="[<tv-config-toolbar-icons>match[yes]]">
+{{$:/plugins/tiddlywiki/markdown/images/new-markdown-button}}
+</$list>
+<$list filter="[<tv-config-toolbar-text>match[yes]]">
+<span class="tc-btn-text"><$text text={{$:/language/Buttons/NewMarkdown/Caption}}/></span>
+</$list>
+</$button>

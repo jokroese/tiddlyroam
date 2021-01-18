@@ -1,0 +1,12 @@
+{
+	"tiddlers": [
+		{
+			"file": "remarkable.js",
+			"fields": {
+				"type": "application/javascript",
+				"title": "$:/plugins/tiddlywiki/markdown/remarkable.js",
+				"module-type": "library"
+			}
+		}
+	]
+}

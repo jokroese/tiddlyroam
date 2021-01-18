@@ -1,0 +1,29 @@
+caption: {{$:/core/images/preview-open}}
+created: 20200129233103456
+modified: 20200604201429202
+tags: $:/tags/SideBar $:/giffmex/stroll $:/giffmex/blinks
+title: $:/.giffmex/sidebar/tabs/strollcontrols
+type: text/vnd.tiddlywiki
+
+\define tagreset() 
+<$list filter="[tag[$:/giffmex/refs]sort[created]] -[[$(currentTiddler)$]]" variable="removeme">
+<$action-listops  $tiddler=<<removeme>> $tags="+[remove[$:/tags/ViewTemplate]]"/>
+</$list>
+<$action-deletefield dummy/>
+\end
+
+''Choose how to view references:''
+
+<$list filter="[tag[$:/giffmex/refs]sort[caption]]">
+<$list filter="[all[current]tag[$:/tags/ViewTemplate]]">
+<$checkbox field=dummy checked="yes" unchecked="yes" default="yes"></$checkbox>
+<$view field="caption"/><br/> 
+</$list>
+<$list filter="[all[current]!tag[$:/tags/ViewTemplate]]">
+<$checkbox tag="$:/tags/ViewTemplate" xinvertTag="yes" checkactions=<<tagreset>>/> <$view field="caption"/><br/> 
+</$list>
+</$list>
+
+{{Hint for Muffin tutorial}}
+
+<br>Note that the gray boxes in the context and transclude options are links to their respective tiddlers.

@@ -1,39 +1,39 @@
-# TiddlyRoam
+# tiddlyroam
 
-## Description
+Built on [TiddlyWiki](tiddlywiki.com/).
 
-TiddlyRoam is your open source external brain.
+Uses the plugins:
 
-TiddlyRoam allows you to quickly create your own wiki. You can add fragments of thoughts and findings whenever they come to you. TiddlyRoam will link them and help you spot the patterns.
+- [TiddlyMap](https://github.com/felixhayashi/TW5-TiddlyMap/)
 
-The project aims to provide a free and open source alternative to the popular [Roam](https://roamresearch.com/).
+## Create tiddlyroam.html
 
-## Features
+1. Set up [TiddlyWiki with node.js](https://tiddlywiki.com/static/Installing%2520TiddlyWiki%2520on%2520Node.js.html)
 
-TiddlyRoam is a [TiddlyWiki](https://tiddlywiki.com/) with bi-directional links and graph maps.
+   1. Install [Node.js](https://tiddlywiki.com/static/Node.js.html).
 
-### Bi-directional links
+      - either from your favourite package manager: typically `apt-get install nodejs` on Debian/Ubuntu Linux or [Termux for Android](https://tiddlywiki.com/static/Serving%20TW5%20from%20Android.html), or `brew install node` on a Mac
 
-This means when you are on page 'Example Page', you can see not just all the pages that 'Example Page' links *to*, but also all pages that link to *it*. This leads to what Roam calls 'networked thought'. It really is something that you need to experience to appreciate.
+      - or directly from http://nodejs.org
+      
+   1. Install TiddlyWiki locally.
 
-### Graph maps
+        - Open a command line terminal and type: `npm install -g tiddlywiki`.
 
-This helps you visualise all the pages you have made and how they link together.
+        - If it fails with an error you may need to re-run the command as an administrator: `sudo npm install -g tiddlywiki` (Mac/Linux)
 
-## Quickstart
+   1. Check [TiddlyWiki](https://tiddlywiki.com/static/TiddlyWiki.html) is installed.
+      - Type `tiddlywiki --version`.
 
-1. Download [tiddlyroam.html](https://github.com/joekroese/tiddlyroam/releases/download/v1.1/tiddlyroam.html)
-1. Download [TiddlyDesktop](https://github.com/Jermolene/TiddlyDesktop/releases)
-1. Drag tiddlyroam.html into TiddlyDesktop
+1. Clone the [tiddlyroam repository](https://github.com/joekroese/tiddlyroam) or Download ZIP.
 
-## Examples of TiddlyRoam
+1. Run `tiddlywiki . --rendertiddler $:/core/save/all tiddlyroam.html text/plain` ([Reference](https://tiddlywiki.com/static/How%2520to%2520build%2520a%2520TiddlyWiki5%2520from%2520individual%2520tiddlers.html).)
 
-- [Citizense](https://citizense.org) use TiddlyRoam for their open access [company wiki](https://citizense.org/wiki).
+## Run tiddlyroam through node.js
 
-If you have examples of your wikis using TiddlyRoam please share them [here](https://github.com/joekroese/tiddlyroam/issues) and I will add them to this list!
-
-## Thanks
-
-TiddlyRoam combines the work of [TiddlyWiki](https://tiddlywiki.com/) by [Jeremy Ruston](jermolene.com), [TiddlyMaps](http://tiddlymap.org/) by [Felix Hayashi](https://github.com/felixhayashi) and [TiddlyBlink](https://giffmex.org/gifts/tiddlyblink.html) by [Dave Gifford](https://giffmex.org/).
-
-I hope this is useful for you [Izzy](https://www.izzykroese.co.uk/).
+1. Install node.js as in step 1. of 'Create tiddlyroam.html'
+2. Create and run a server:
+   1. `tiddlywiki . --init server` to create a folder for a new wiki that includes server-related components
+   1. `tiddlywiki . --listen` to start
+   1. Visit http://127.0.0.1:8080/ in your browser
+   1. Try editing and creating tiddlers
