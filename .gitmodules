@@ -1,0 +1,3 @@
+[submodule "submodules/tw5-relink"]
+	path = submodules/tw5-relink
+	url = https://github.com/flibbles/tw5-relink.git
