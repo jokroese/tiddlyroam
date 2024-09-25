@@ -1,0 +1,29 @@
+caption: TiddlyBlink gears and doo-hickeys
+created: 20200131181401307
+modified: 20200304195249374
+tags: tb starthere meta
+title: $:/.giffmex/meta/TiddlyBlink.gears.and.doo-hickeys
+
+For those who want to understand ~TiddlyBlink better, tinker with it and customize it, here is the basic information (assuming you already know how ~TiddlyWiki works).
+
+''General''
+
+*CSS styles can be found and edited in $:/.giffmex/.Stylesheet4tiddlyblink 
+
+''Tiddler toolbar in view mode''
+
+*The + icon activates $:/.giffmex/ViewToolbar/new-note-here and the clock icon activates $:/.giffmex/ViewToolbar/new-note-here-datetime . These create new tiddlers whose text field contains a link to the tiddler used to create them. So the 'child' tiddler contains a link to the 'parent' tiddler. The title field is either empty or contains a date and time stamp, depending on which button is chosen.
+*The {{$:/core/images/full-screen-button}} icon activates the [[Fullscreen editor plugin|$:/plugins/jd/fullscreen-editor]]. This opens the current tiddler in edit mode that occupies the entire screen.
+
+''Link creation and editing''
+
+*Typing `[[` activates autocomplete, executed by the [[comptext plugin|$:/plugins/snowgoon88/edit-comptext]]. If the tiddler already exists, you can hit enter if the desired tiddler is the first entry, or navigate with the down arrow key until you reach it. Then hit enter. The opening and closing brackets that get created by this plugin can be modified using the tiddler $:/plugins/snowgoon88/edit-comptext/config .
+**Note that the comptext plugin relies on $:/config/EditorTypeMappings/text/vnd.tiddlywiki set to `comptext`
+*When you rename a tiddler, this activates the [[Relink plugin|$:/plugins/flibbles/relink]]. This changes all the references to the renamed tiddler title found as links in all the other tiddlers. It does not change references that are not found in links.
+*WikiWords in CamelCase automatically turn into links. $:/sk/WhiteList is a list run by the [[Whitelist plugin|$:/plugins/sk/WhiteList]] that allows you to list all WikiWords you do not want turned into links. Other options: manually insert `~` before the WikiWords as they occur in tidders, or, if you are like me and find WikiWords annoying rather than helpful, uncheck the first checkbox in the $:/ControlPanel > settings tab.
+
+''Sidebar''
+
+*The ~TiddlyBlink sidebar is found in the $:/.giffmex/sidebar/tabs/tiddlyblinkcontrols tiddler.
+*The blue clock button in the sidebar activates $:/.giffmex/buttons/newnote-datetime . This is set up to create a new tiddler with a date and timestamp in the title.
+*Clicking on a checkmark in the ~TiddlyBlink tab tags one of three tiddlers ($:/.giffmex/ViewTemplate/refscontext, $:/.giffmex/ViewTemplate/refslinks, $:/.giffmex/ViewTemplate/refstranscludeclean and $:/.giffmex/ViewTemplate/refstranscludecollapse) with the tag ~$:/tags/ViewTemplate, making them show up under the tiddler. Those three tiddlers grab all the text references to the current tiddler, and format them into either links, transclusions, or highlighted search results in context. The latter uses the [[ContextPlugin|$:/plugins/danielo515/ContextPlugin]]. 

@@ -1,0 +1,11 @@
+caption: simple transclusion
+created: 20200126142157739
+modified: 20200304195401578
+tags: tb refs
+title: $:/.giffmex/ViewTemplate/refstranscludeclean
+
+<hr>
+
+References: <br>
+
+<$list filter="[!is[system]all[current]backlinks[]!tag[hide]!tag[outlines]sort[title]] -[is[current]]"><$link><$view field="title"/></$link><span class="indent1"><$link><span class="graybox"><$transclude field="text" mode="block" /></span></$link></span></$list>

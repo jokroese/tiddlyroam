@@ -1,0 +1,14 @@
+caption: links
+created: 20200126143031898
+modified: 20200401152140125
+tags: refs tb
+title: $:/.giffmex/ViewTemplate/refslinks
+
+\define mycrit() (?i)\b$(searchspx)$\b
+
+<hr>References: 
+
+<$vars searchme=<<currentTiddler>> searchspx={{{ [<currentTiddler>escaperegexp[]]}}} >
+
+<$list filter="[!is[system]all[current]backlinks[]!tag[hide]sort[title]] -[is[current]]"><$link><$view field="title" /></$link><br></$list>
+</$vars>

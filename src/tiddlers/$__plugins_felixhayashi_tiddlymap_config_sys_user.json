@@ -1,0 +1,23 @@
+{
+    "field.nodeLabel": "caption",
+    "field.nodeIcon": "icon",
+    "field.nodeInfo": "description",
+    "field.viewMarker": "isview",
+    "liveTab.fallbackView": "Live View",
+    "edgeClickBehaviour": "manager",
+    "debug": "false",
+    "notifications": "true",
+    "popups.enabled": "true",
+    "popups.delay": "600",
+    "popups.width": "240px",
+    "popups.height": "140px",
+    "jsonIndentation": "1",
+    "alwaysAddNodeIdToViewFilter": "true",
+    "editNodeOnCreate": "false",
+    "singleClickMode": "false",
+    "nodeFilterNeighbours": "false",
+    "editorMenuBar.showNeighScopeButton": "true",
+    "editorMenuBar.showRasterMenuButton": "true",
+    "editorMenuBar.showScreenshotButton": "true",
+    "defaultView": "Live View"
+}

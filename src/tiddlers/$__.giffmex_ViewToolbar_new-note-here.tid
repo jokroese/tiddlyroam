@@ -1,0 +1,20 @@
+caption: {{$:/core/images/new-journal-button}} {{$:/language/Buttons/NewJournalHere/Caption}}
+created: 20200127162624895
+description: {{$:/language/Buttons/NewJournalHere/Hint}}
+modified: 20200304195448159
+tags: tb $:/tags/ViewToolbar
+title: $:/.giffmex/ViewToolbar/new-note-here
+
+\define button()
+<$button class=<<tv-config-toolbar-class>> actions=<<actions>>>
+{{$:/core/images/new-button}}
+</$button>
+\end
+
+\define actions()
+<$action-sendmessage $message="tm-new-tiddler" title=<<journalTitle>> text="""[[$(tid)$]]"""/>
+\end
+
+<$wikify name=tid text=<<currentTiddler>>>
+<<button>>
+</$wikify>

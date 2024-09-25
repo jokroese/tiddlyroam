@@ -1,0 +1,15 @@
+created: 20200102141142879
+modified: 20200304195036743
+tags: tb
+title: $:/.giffmex/actions/new-journal
+
+<$vars journalTitleTemplate={{$:/config/NewJournal/Title}} journalTags={{$:/config/NewJournal/Tags}} journalText="">
+<$wikify name="journalTitle" text="""<$macrocall $name="now" format=<<journalTitleTemplate>>/>""">
+<$reveal type="nomatch" state=<<journalTitle>> text="">
+<$action-sendmessage $message="tm-new-tiddler" title=<<journalTitle>> tags="" text={{{ [<journalTitle>get[]] }}}/>
+</$reveal>
+<$reveal type="match" state=<<journalTitle>> text="">
+<$action-sendmessage $message="tm-new-tiddler" title=<<journalTitle>> tags="" text=<<journalText>>/>
+</$reveal>
+</$wikify>
+</$vars>

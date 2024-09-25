@@ -1,0 +1,23 @@
+caption: {{$:/core/images/full-screen-button}} edit in full screen
+created: 20190204123121582
+creator: jd
+description: Edit in full screen mode
+modified: 20200304200142793
+modifier: jd
+tags: tb $:/tags/ViewToolbar
+title: $:/jd/fullscreen-editor/EditButton
+
+\whitespace trim
+<$navigator story="$:/fullscreen-editor">
+<$button message="tm-edit-tiddler" tooltip="Edit in full screen mode" class=<<tv-config-toolbar-class>>>
+<$list filter="[<tv-config-toolbar-icons>prefix[yes]]">
+{{$:/core/images/full-screen-button}}
+</$list>
+<$list filter="[<tv-config-toolbar-text>prefix[yes]]">
+<span class="tc-btn-text">
+<$text text=" "/>
+<$text text="edit in full screen"/>
+</span>
+</$list>
+</$button>
+</$navigator>

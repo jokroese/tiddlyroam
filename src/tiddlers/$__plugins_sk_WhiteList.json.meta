@@ -1,0 +1,9 @@
+author: Stephen Kimmel
+created: 20200304200251053
+description: White List
+modified: 20200304200252195
+plugin-type: plugin
+tags: tb
+title: $:/plugins/sk/WhiteList
+type: application/json
+version: 0.0.3

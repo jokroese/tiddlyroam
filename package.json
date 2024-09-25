@@ -1,0 +1,19 @@
+{
+  "name": "tiddlyroam",
+  "version": "1.2",
+  "description": "Your open source external brain",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tiddlywiki src --listen",
+    "build": "tiddlywiki src --load src --render . $:/core/save/all index.html text/plain"
+  },
+  "keywords": [
+    "wiki",
+    "tiddlywiki"
+  ],
+  "author": "Jo Kroese",
+  "license": "BSD-2-Clause",
+  "devDependencies": {
+    "tiddlywiki": "^5.3.5"
+  }
+}

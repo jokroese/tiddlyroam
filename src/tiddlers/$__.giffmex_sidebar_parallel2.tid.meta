@@ -1,0 +1,11 @@
+caption: parallel
+created: 20190624061500276
+creator: Gloom
+infodesc: For temporarily displaying a tiddler in the sidebar (without having to tag it). Type the tiddler title in the text field and tiddler will sidpay below it.
+modified: 20200304195325476
+modifier: Gloom
+tags: tb $:/tags/SideBar *sidebar
+title: $:/.giffmex/sidebar/parallel2
+tooltip: For temporarily displaying a tiddler in the sidebar (without having to tag it)
+type: application/x-tiddler
+{{$: /.giffmex/sidebar/parallel}} <br><h2><$list filter="[{$:/temp/sbartidddisplayvalue}is[tiddler]]" emptyMessage="tiddler doesn't exist" ></$list></h2>

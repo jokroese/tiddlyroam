@@ -1,0 +1,26 @@
+caption: Hacking TiddlyBlink
+created: 20200212220418203
+modified: 20200304195127414
+tags: tb meta
+title: $:/.giffmex/meta/hack.tiddlyblink
+
+!!All references, in links and in regular text.
+
+We disabled references that do not appear in links. This was a feature in early versions of TiddlyBlink, but we and others found it produced a lot of unwanted references, and confusion as people clicked the link and did not have a link to return back to the previous tiddler.
+
+But if you would like to have this feature back in your TiddlyBlink, just edit the following tiddlers:
+
+"""
+ $:/.giffmex/ViewTemplate/refscontext
+$:/.giffmex/ViewTemplate/refslinks
+$:/.giffmex/ViewTemplate/refstranscludeclean
+$:/.giffmex/ViewTemplate/refstranscludecollapse
+""" 
+
+And replace
+
+`all[current]backlinks[]`
+
+with
+
+`regexp:text<mycrit>`

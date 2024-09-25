@@ -1,0 +1,584 @@
+{
+    "tiddlers": {
+        "$:/plugins/flibbles/relink/js/bulkops.js": {
+            "text": "/*\\\nmodule-type: startup\n\nReplaces the relinkTiddler defined in $:/core/modules/wiki-bulkops.js\n\nThis is a startup instead of a wikimethods module-type because it's the only\nway to ensure this runs after the old relinkTiddler method is applied.\n\n\\*/\n(function(){\n\n/*jslint node: false, browser: true */\n/*global $tw: false */\n\"use strict\";\n\nvar language = require('$:/plugins/flibbles/relink/js/language.js');\n\nexports.name = \"redefine-relinkTiddler\";\nexports.synchronous = true;\n// load-modules is when wikimethods are applied in\n// ``$:/core/modules/startup/load-modules.js``\nexports.after = ['load-modules'];\n\nexports.startup = function() {\n\t$tw.Wiki.prototype.relinkTiddler = relinkTiddler;\n};\n\n/** Walks through all relinkable tiddlers and relinks them.\n *  This replaces the existing function in core Tiddlywiki.\n */\nfunction relinkTiddler(fromTitle, toTitle, options) {\n\tvar self = this;\n\tvar failures = this.eachRelinkableTiddler(\n\t\t\tfromTitle,\n\t\t\ttoTitle,\n\t\t\toptions,\n\t\t\tfunction(changes, tiddler) {\n\t\tvar newTiddler = new $tw.Tiddler(tiddler,changes,self.getModificationFields())\n\t\tnewTiddler = $tw.hooks.invokeHook(\"th-relinking-tiddler\",newTiddler,tiddler);\n\t\tself.addTiddler(newTiddler);\n\t});\n\tif (failures.length > 0) {\n\t\tlanguage.reportFailures(failures);\n\t}\n};\n\n})();\n",
+            "module-type": "startup",
+            "title": "$:/plugins/flibbles/relink/js/bulkops.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/errors.js": {
+            "text": "/*\\\nmodule-type: library\n\nThis is the exception that gets thrown when a relink is impossible.\n  (Or the hoops we'd have to go through to make it work are more than the user\n   would want Relink to do, like create new tiddlers)\n\\*/\n\nfunction RelinkError() {};\nRelinkError.prototype = Object.create(Error);\nexports.RelinkError = RelinkError;\n\nfunction CannotRelinkError() { };\nCannotRelinkError.prototype = new RelinkError();\nexports.CannotRelinkError = CannotRelinkError\n\nfunction CannotFindMacroDefError(macroName) { this.macroName = macroName; };\nCannotFindMacroDefError.prototype = new RelinkError();\nexports.CannotFindMacroDefError = CannotFindMacroDefError;\n//Cannot find definition for ${macroName}. Make sure your macro whitelist is configured properly, and that you're macro is globally defined, or defined in all the places it's used.\n",
+            "module-type": "library",
+            "title": "$:/plugins/flibbles/relink/js/errors.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/language.js": {
+            "text": "/*\\\nmodule-type: library\n\nThis handles all logging and alerts Relink emits.\n\n\\*/\n\nexports.logRelink = function(message, args, options) {\n\tif (options.quiet) {\n\t\treturn;\n\t}\n\tvar raw = exports.log[message];\n\tif (raw) {\n\t\t// This is cheap, but whatevs. To do a proper\n\t\t// rendering would require working through a wiki\n\t\t// object. Too heavy weight for log messages.\n\t\tvar msg = raw.replace(/<<([^<>]+)>>/g, function(match, key) {\n\t\t\treturn args[key] || (\"<<\"+key+\">>\");\n\t\t});\n\t\tif (raw.indexOf('%c') >= 0) {\n\t\t\t// Doing a little bit of bold so the user sees\n\t\t\t// where we had to jump through hoops.\n\t\t\tconsole.log(\"%c\" + msg, \"\", \"font-weight: bold;\");\n\t\t} else {\n\t\t\tconsole.log(msg);\n\t\t}\n\t} else {\n\t\tconsole.warn(\"No such log message: \" + message);\n\t}\n};\n\nexports.getString = function(title, options) {\n\ttitle = \"$:/plugins/flibbles/relink/language/\" + title;\n\treturn options.wiki.renderTiddler(\"text/plain\", title,\n\t                                  {variables: options.variables});\n};\n\nexports.failureAlert = \"Relink was unable to update the following tiddlers due to the complexity of the title:\";\n\nexports.reportFailures = function(failureList) {\n\tvar reportList = failureList.map(function(f) {return \"\\n   \" + f});\n\tconsole.warn(exports.failureAlert + reportList);\n};\n\nexports.log = {\n\t\"attribute\": \"Renaming '<<from>>' to '<<to>>' in <<<element>> <<attribute>> /> attribute of tiddler '<<tiddler>>'\",\n\t\"attribute-placeholder\": \"Renaming '<<from>>' to '<<to>>' in <<<element>> <<attribute>> /> attribute of tiddler '<<tiddler>>' %cby creating placeholder macros\",\n\t\"field\": \"Renaming '<<from>>' to '<<to>>' in <<field>> of tiddler '<<tiddler>>'\",\n\t\"filteredtransclude\": \"Renaming '<<from>>' to '<<to>>' in filtered transclusion of tiddler '<<tiddler>>'\",\n\t\"filteredtransclude-placeholder\": \"Renaming '<<from>>' to '<<to>>' in filtered transclusion of tiddler '<<tiddler>>' %cby creating placeholder macros\",\n\t\"filteredtransclude-placeholder-widget\": \"Renaming '<<from>>' to '<<to>>' in filtered transclusion of tiddler '<<tiddler>>' %cby converting it into a widget and creating placeholder macros\",\n\t\"filteredtransclude-widget\": \"Renaming '<<from>>' to '<<to>>' in filtered transclusion of tiddler '<<tiddler>>' %cby converting it into a widget\",\n\t\"import\": \"Renaming '<<from>>' to '<<to>>' in \\\\import filter of tiddler '<<tiddler>>'\",\n\t\"import-placeholder\": \"Renaming '<<from>>' to '<<to>>' in \\\\import filter of tiddler '<<tiddler>>' %cby creating placeholder macros\",\n\t\"macrodef\": \"Renaming '<<from>>' to '<<to>>' in <<macro>> definition of tiddler '<<tiddler>>'\",\n\t\"macrodef-placeholder\": \"Renaming '<<from>>' to '<<to>>' in <<macro>> definition of tiddler '<<tiddler>>' %cby creating more placeholder macros\",\n\t\"prettylink\": \"Renaming '<<from>>' to '<<to>>' in prettylink of tiddler '<<tiddler>>'\",\n\t\"prettylink-placeholder\": \"Renaming '<<from>>' to '<<to>>' in prettylink of tiddler '<<tiddler>>' %cby converting it into a widget and creating placeholder macros\",\n\t\"prettylink-widget\": \"Renaming '<<from>>' to '<<to>>' in prettylink of tiddler '<<tiddler>>' %cby converting it into a widget\",\n\t\"transclude\": \"Renaming '<<from>>' to '<<to>>' in transclusion of tiddler '<<tiddler>>'\",\n\t\"transclude-placeholder\": \"Renaming '<<from>>' to '<<to>>' in transclusion of tiddler '<<tiddler>>' %cby converting it into a widget and creating placeholder macros\",\n\t\"transclude-widget\": \"Renaming '<<from>>' to '<<to>>' in transclusion of tiddler '<<tiddler>>' %cby converting it into a widget\",\n\t\"wikilink\": \"Renaming '<<from>>' to '<<to>>' in CamelCase link of tiddler '<<tiddler>>'\",\n\t\"wikilink-placeholder\": \"Renaming '<<from>>' to '<<to>>' in CamelCase link of tiddler '<<tiddler>>' %cby converting it into a widget and creating placeholder macros\",\n\t\"wikilink-pretty\": \"Renaming '<<from>>' to '<<to>>' in CamelCase link of tiddler '<<tiddler>>' %cby converting it into a prettylink\"\n};\n",
+            "module-type": "library",
+            "title": "$:/plugins/flibbles/relink/js/language.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/settings.js": {
+            "text": "/*\\\nmodule-type: library\n\nThis handles the fetching and distribution of relink settings.\n\n\\*/\n\nvar fieldTypes = Object.create(null);\n\n$tw.modules.forEachModuleOfType(\"relinkfieldtype\", function(title, exports) {\n\tfieldTypes[exports.name] = exports;\n\t// For legacy reasons, some of the field types can go by other names\n\tif (exports.aliases) {\n\t\t$tw.utils.each(exports.aliases, function(alias) {\n\t\t\tfieldTypes[alias] = exports;\n\t\t});\n\t}\n});\n\n/**Returns a specific relinker.\n * This is useful for wikitext rules which need to parse a filter or a list\n */\nexports.getRelinker = function(name) {\n\treturn fieldTypes[name];\n};\n\nexports.getAttributes = function(options) {\n\treturn getSettings(options).attributes;\n};\n\nexports.getFields = function(options) {\n\treturn getSettings(options).fields;\n};\n\nexports.getMacros = function(options) {\n\treturn getSettings(options).macros;\n};\n\nexports.getOperators = function(options) {\n\treturn getSettings(options).operators;\n};\n\n/**Factories define methods that create settings given config tiddlers.\n * for factory method 'example', it will be called once for each:\n * \"$:/config/flibbles/relink/example/...\" tiddler that exists.\n * the argument \"key\" will be set to the contents of \"...\"\n *\n * The reason I build relink settings in this convoluted way is to minimize\n * the number of times tiddlywiki has to run through EVERY tiddler looking\n * for relink config tiddlers.\n *\n * Also, by exporting \"factories\", anyone who extends relink can patch in\n * their own factory methods to create settings that are generated exactly\n * once per rename.\n */\nexports.factories = {\n\tattributes: function(attributes, tiddler, key) {\n\t\tvar relinker = fieldTypes[tiddler.fields.text];\n\t\tif (relinker) {\n\t\t\tvar elem = root(key);\n\t\t\tvar attr = key.substr(elem.length+1);\n\t\t\tattributes[elem] = attributes[elem] || Object.create(null);\n\t\t\tattributes[elem][attr] = relinker;\n\t\t}\n\t},\n\tfields: function(fields, tiddler, name) {\n\t\tvar relinker = fieldTypes[tiddler.fields.text];\n\t\tif (relinker) {\n\t\t\tfields[name] = relinker;\n\t\t}\n\t},\n\tmacros: function(macros, tiddler, key) {\n\t\tvar relinker = fieldTypes[tiddler.fields.text];\n\t\tif (relinker) {\n\t\t\t// We take the last index, not the first, because macro\n\t\t\t// parameters can't have slashes, but macroNames can.\n\t\t\tvar name = dir(key);\n\t\t\tvar arg = key.substr(name.length+1);\n\t\t\tmacros[name] = macros[name] || Object.create(null);\n\t\t\tmacros[name][arg] = relinker;\n\t\t}\n\t},\n\toperators: function(operators, tiddler, name) {\n\t\tvar relinker = fieldTypes[tiddler.fields.text];\n\t\tif (relinker) {\n\t\t\toperators[name] = relinker;\n\t\t}\n\t}\n};\n\n/**We're caching the generated settings inside of options. Not exactly how\n * options was meant to be used, but it's fiiiiine.\n * The wiki global cache isn't a great place, because it'll get cleared many\n * times during a bulk relinking operation, and we can't recalculate this every\n * time without exploding a rename operation's time.\n * options works great. It only lasts just as long as the rename.\n * No longer, no shorter.\n */\nfunction getSettings(options) {\n\tvar secretCache = \"__relink_settings\";\n\tvar cache = options[secretCache];\n\tif (cache === undefined) {\n\t\tcache = options[secretCache] = compileSettings(options.wiki);\n\t}\n\treturn cache;\n};\n\nfunction compileSettings(wiki) {\n\tvar prefix = \"$:/config/flibbles/relink/\";\n\tvar settings = Object.create(null);\n\tfor (var name in exports.factories) {\n\t\tsettings[name] = Object.create(null);\n\t}\n\twiki.eachShadowPlusTiddlers(function(tiddler, title) {\n\t\tif (title.substr(0, prefix.length) === prefix) {\n\t\t\tvar remainder = title.substr(prefix.length);\n\t\t\tvar category = root(remainder);\n\t\t\tvar factory = exports.factories[category];\n\t\t\tif (factory) {\n\t\t\t\tvar name = remainder.substr(category.length+1);\n\t\t\t\tfactory(settings[category], tiddler, name);\n\t\t\t}\n\t\t}\n\t});\n\treturn settings;\n};\n\n/* Returns first bit of a path. path/to/tiddler -> path\n */\nfunction root(string) {\n\tvar index = string.indexOf('/');\n\tif (index >= 0) {\n\t\treturn string.substr(0, index);\n\t}\n};\n\n/* Returns all but the last bit of a path. path/to/tiddler -> path/to\n */\nfunction dir(string) {\n\tvar index = string.lastIndexOf('/');\n\tif (index >= 0) {\n\t\treturn string.substr(0, index);\n\t}\n}\n",
+            "module-type": "library",
+            "title": "$:/plugins/flibbles/relink/js/settings.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/wikimethods.js": {
+            "text": "/*\\\nmodule-type: wikimethod\n\nIntroduces some utility methods used by Relink.\n\n\\*/\n\nvar errors = require('$:/plugins/flibbles/relink/js/errors');\n\nvar relinkOperations = Object.create(null);\n$tw.modules.applyMethods('relinkoperator', relinkOperations);\n\n/**Walks through all non-shadow tiddlers and sees which ones need to be relinked\n *\n * For each one, calls method on it with arguments (changes, tiddler, title)\n * Returns a list of tiddlers it would fail to update.\n */\nexports.eachRelinkableTiddler = function(fromTitle, toTitle, options, method) {\n\tvar data = this.getRelinkableTiddlers(fromTitle, toTitle, options);\n\tfor (var title in data.changes) {\n\t\tmethod(data.changes[title], this.getTiddler(title), title);\n\t}\n\treturn data.failures;\n};\n\n/** Returns a pair like this,\n *  { changes: {...}, failures: [] }\n */\nexports.getRelinkableTiddlers = function(fromTitle, toTitle, options) {\n\tvar cache = this.getGlobalCache(\"relink-\"+fromTitle, function() {\n\t\treturn Object.create(null);\n\t});\n\tif (!cache[toTitle]) {\n\t\tcache[toTitle] = getFreshRelinkableTiddlers(this, fromTitle, toTitle, options);\n\t}\n\treturn cache[toTitle];\n};\n\nfunction getFreshRelinkableTiddlers(wiki, fromTitle, toTitle, options) {\n\toptions = options || {};\n\toptions.wiki = options.wiki || wiki;\n\tfromTitle = (fromTitle || \"\").trim();\n\ttoTitle = (toTitle || \"\").trim();\n\tvar failures = [];\n\tvar changeList = Object.create(null);\n\tif(fromTitle && toTitle && fromTitle !== toTitle) {\n\t\tvar toUpdate = getRelinkFilter(wiki);\n\t\tvar tiddlerList = toUpdate.call(wiki); // no source or widget\n\t\tfor (var i = 0; i < tiddlerList.length; i++) {\n\t\t\tvar title = tiddlerList[i];\n\t\t\tvar tiddler = wiki.getTiddler(title);\n\t\t\t// Don't touch plugins or JavaScript modules\n\t\t\tif(tiddler\n\t\t\t&& !tiddler.fields[\"plugin-type\"]\n\t\t\t&& tiddler.fields.type !== \"application/javascript\") {\n\t\t\t\ttry {\n\t\t\t\t\tvar changes = Object.create(null);\n\t\t\t\t\tfor (var operation in relinkOperations) {\n\t\t\t\t\t\trelinkOperations[operation](tiddler, fromTitle, toTitle, changes, options);\n\t\t\t\t\t}\n\t\t\t\t\t// If any fields changed, update tiddler\n\t\t\t\t\tif(Object.keys(changes).length > 0) {\n\t\t\t\t\t\tchangeList[title] = changes;\n\t\t\t\t\t}\n\t\t\t\t} catch (e) {\n\t\t\t\t\tif (e instanceof errors.RelinkError) {\n\t\t\t\t\t\tfailures.push(title);\n\t\t\t\t\t} else {\n\t\t\t\t\t\t// Should we test for instanceof Error instead?: yes\n\t\t\t\t\t\t// Does that work in the testing environment?: no\n\t\t\t\t\t\tif (e.message) {\n\t\t\t\t\t\t\te.message = e.message + \"\\nWhen relinking '\" + title + \"'\";\n\t\t\t\t\t\t}\n\t\t\t\t\t\tthrow e;\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\treturn {changes: changeList, failures: failures};\n};\n\nfunction getRelinkFilter(wiki) {\n\tvar toUpdate = \"$:/config/flibbles/relink/to-update\";\n\treturn wiki.getCacheForTiddler(toUpdate, \"relink-toUpdate\", function() {\n\t\tvar tiddler = wiki.getTiddler(toUpdate);\n\t\tif (tiddler) {\n\t\t\tvar filter = wiki.compileFilter(tiddler.fields.text);\n\t\t\treturn filter;\n\t\t} else {\n\t\t\treturn wiki.allTitles;\n\t\t}\n\t});\n};\n\n/**Returns a list of tiddlers that would be renamed by a relink operations.\n */\nexports.relinkTiddlerDryRun = function(fromTitle, toTitle, options) {\n\tvar results = [];\n\tthis.eachRelinkableTiddler(\n\t\t\tfromTitle,\n\t\t\ttoTitle,\n\t\t\toptions,\n\t\t\tfunction(changes, tiddler, title) {\n\t\tresults.push(title);\n\t});\n\treturn results;\n};\n\nvar ImportVariablesWidget = require(\"$:/core/modules/widgets/importvariables.js\").importvariables;\n\nexports.relinkGlobalMacros = function() {\n\tif (!this._relinkWidget) {\n\t\tvar importWidget = this.relinkGenerateVariableWidget( \"[[$:/core/ui/PageMacros]] [all[shadows+tiddlers]tag[$:/tags/Macro]!has[draft.of]]\");\n\t\tthis.addEventListener(\"change\", function(changes) {\n\t\t\timportWidget.refresh(changes);\n\t\t});\n\t\tthis._relinkWidget = importWidget;\n\t}\n\tvar rtn = this._relinkWidget;\n\twhile (rtn.children.length > 0) {\n\t\trtn = rtn.children[0];\n\t}\n\treturn rtn;\n};\n\nexports.relinkGenerateVariableWidget = function(filter, parent) {\n\tvar treeNode = { attributes: {\n\t\t\"filter\": {\n\t\t\ttype: \"string\",\n\t\t\tvalue: filter\n\t\t}\n\t}};\n\tvar importWidget = new ImportVariablesWidget(treeNode,{parentWidget: parent, wiki: this});\n\timportWidget.computeAttributes();\n\timportWidget.execute();\n\t// These two functions neuter the widget, so it never tries\n\t// to render.\n\timportWidget.findNextSiblingDomNode = function() {};\n\timportWidget.renderChildren(this.parentDomNode);\n\treturn importWidget;\n};\n",
+            "module-type": "wikimethod",
+            "title": "$:/plugins/flibbles/relink/js/wikimethods.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/filteroperators/impossible.js": {
+            "text": "/*\\\nmodule-type: relinkfilteroperator\n\nGiven an input of toTitles, (probably just one), outputs all the tiddlers in\nwhich Relink would fail to update the operand to any of those given titles.\n\n`[[{terrible'}!!\"title\"]relink:impossible[fromTiddler]]`\n\nWould output all the tiddlers where Relink would fail to update `from here` to\n`{terrible'}!!\"title\"`\n\nI know, it's weird. You'd think it would test all incoming inputs instead of\nusing them as to fromTitle, but this is the only way to input both a fromTitle\nand a toTitle.\n\nResults are dominantly appanded if more than one input tiddler is given.\n\\*/\n\nexports.impossible = function(source,operator,options) {\n\tvar fromTitle = operator.operand,\n\t\tresults = [];\n\tif (fromTitle) {\n\t\tsource(function(toTiddler, toTitle) {\n\t\t\tvar fails = options.wiki.eachRelinkableTiddler(\n\t\t\t\tfromTitle, toTitle,\n\t\t\t\t$tw.utils.extend({quiet: true}, options),\n\t\t\t\tfunction(tiddler, title) {});\n\t\t\t$tw.utils.pushTop(results, fails);\n\t\t});\n\t}\n\treturn results;\n};\n",
+            "module-type": "relinkfilteroperator",
+            "title": "$:/plugins/flibbles/relink/js/filteroperators/impossible.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/filteroperators/references.js": {
+            "text": "/*\\\nmodule-type: relinkfilteroperator\n\nGiven a title as an operand, returns all non-shadow tiddlers that have any\nsort of updatable reference to it.\n\n\n`relink:references[fromTiddler]]`\n\nReturns all tiddlers that reference `fromTiddler` somewhere inside them.\n\nInput is ignored. Maybe it shouldn't do this.\nAlso, maybe it should properly recon, instead of fake replacing the title with\n`__relink_dummy__`\n\\*/\n\nexports.references = function(source,operator,options) {\n\tvar fromTitle = operator.operand,\n\t\tresults = [];\n\tif (fromTitle) {\n\t\toptions.wiki.eachRelinkableTiddler(\n\t\t\tfromTitle, \"__relink_dummy__\",\n\t\t\t$tw.utils.extend({quiet: true}, options),\n\t\t\tfunction(changes, tiddler, title) {\n\t\t\t\tresults.push(title);\n\t\t\t});\n\t}\n\treturn results;\n};\n",
+            "module-type": "relinkfilteroperator",
+            "title": "$:/plugins/flibbles/relink/js/filteroperators/references.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/filteroperators/relink.js": {
+            "text": "/*\\\nmodule-type: filteroperator\n\nThis filter acts as a namespace for several small, simple filters, such as\n\n`[relink:impossible[]]`\n\n\\*/\n\n/*jslint node: true, browser: true */\n/*global $tw: false */\n\"use strict\";\n\nvar language = require('$:/plugins/flibbles/relink/js/language.js');\n\nvar relinkFilterOperators;\n\nfunction getRelinkFilterOperators() {\n\tif(!relinkFilterOperators) {\n\t\trelinkFilterOperators = {};\n\t\t$tw.modules.applyMethods(\"relinkfilteroperator\",\n\t\t                         relinkFilterOperators);\n\t}\n\treturn relinkFilterOperators;\n}\n\nexports.relink = function(source,operator,options) {\n\tvar suffixPair = parseSuffix(operator.suffix);\n\tvar relinkFilterOperator = getRelinkFilterOperators()[suffixPair[0]];\n\tif (relinkFilterOperator) {\n\t\tvar newOperator = $tw.utils.extend({}, operator);\n\t\tnewOperator.suffix = suffixPair[1];\n\t\treturn relinkFilterOperator(source, newOperator, options);\n\t} else {\n\t\treturn [language.getString(\"Error/RelinkFilterOperator\", options)];\n\t}\n};\n\nfunction parseSuffix(suffix) {\n\tvar index = suffix? suffix.indexOf(\":\"): -1;\n\tif (index >= 0) {\n\t\treturn [suffix.substr(0, index), suffix.substr(index+1)];\n\t} else {\n\t\treturn [suffix];\n\t}\n}\n",
+            "module-type": "filteroperator",
+            "title": "$:/plugins/flibbles/relink/js/filteroperators/relink.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/filteroperators/splitafter.js": {
+            "text": "/*\\\ntitle: $:/core/modules/filters/splitbefore.js\ntype: application/javascript\nmodule-type: relinkfilteroperator\n\nFilter operator that splits each result on the last occurance of the specified separator and returns the last bit.\n\nWhat does this have to do with relink? Nothing. I need this so I can render\nthe configuration menu. I //could// use [splitregexp[]], but then I'd be\nlimited to Tiddlywiki v5.1.20 or later.\n\n\\*/\n(function(){\n\n/*jslint node: true, browser: true */\n/*global $tw: false */\n\"use strict\";\n\n/*\nExport our filter function\n*/\nexports.splitafter = function(source,operator,options) {\n\tvar results = [];\n\tsource(function(tiddler,title) {\n\t\tvar index = title.lastIndexOf(operator.operand);\n\t\tif(index < 0) {\n\t\t\t$tw.utils.pushTop(results,title);\n\t\t} else {\n\t\t\t$tw.utils.pushTop(results,title.substr(index+1));\n\t\t}\n\t});\n\treturn results;\n};\n\n})();\n\n",
+            "title": "$:/plugins/flibbles/relink/js/filteroperators/splitafter.js",
+            "type": "application/javascript",
+            "module-type": "relinkfilteroperator"
+        },
+        "$:/plugins/flibbles/relink/js/fieldtypes/filter.js": {
+            "text": "/*\\\nThis specifies logic for updating filters to reflect title changes.\n\\*/\n\n/**Returns undefined if no change was made.\n */\n\nvar CannotRelinkError = require(\"$:/plugins/flibbles/relink/js/errors.js\").CannotRelinkError;\nvar refHandler = require(\"$:/plugins/flibbles/relink/js/fieldtypes/reference\");\nvar settings = require('$:/plugins/flibbles/relink/js/settings.js');\nvar Rebuilder = require(\"$:/plugins/flibbles/relink/js/utils/rebuilder\");\n\nexports.name = \"filter\";\n\nexports.relink = function(filter, fromTitle, toTitle, options) {\n\tif (!filter || filter.indexOf(fromTitle) < 0) {\n\t\treturn undefined;\n\t}\n\tvar relinker = new Rebuilder(filter);\n\tvar whitelist = settings.getOperators(options);\n\tvar p = 0, // Current position in the filter string\n\t\tmatch, noPrecedingWordBarrier,\n\t\twordBarrierRequired=false;\n\tvar whitespaceRegExp = /\\s+/mg,\n\t\toperandRegExp = /((?:\\+|\\-|~|=)?)(?:(\\[)|(?:\"([^\"]*)\")|(?:'([^']*)')|([^\\s\\[\\]]+))/mg;\n\twhile(p < filter.length) {\n\t\t// Skip any whitespace\n\t\twhitespaceRegExp.lastIndex = p;\n\t\tmatch = whitespaceRegExp.exec(filter);\n\t\tnoPrecedingWordBarrier = false;\n\t\tif(match && match.index === p) {\n\t\t\tp = p + match[0].length;\n\t\t} else if (p != 0) {\n\t\t\tif (wordBarrierRequired) {\n\t\t\t\trelinker.add(' ', p, p);\n\t\t\t\twordBarrierRequired = false;\n\t\t\t} else {\n\t\t\t\tnoPrecedingWordBarrier = true;\n\t\t\t}\n\t\t}\n\t\t// Match the start of the operation\n\t\tif(p < filter.length) {\n\t\t\tvar val;\n\t\t\toperandRegExp.lastIndex = p;\n\t\t\tmatch = operandRegExp.exec(filter);\n\t\t\tif(!match || match.index !== p) {\n\t\t\t\t// It's a bad filter\n\t\t\t\treturn undefined;\n\t\t\t}\n\t\t\tif(match[1]) { // prefix\n\t\t\t\tp++;\n\t\t\t}\n\t\t\tif(match[2]) { // Opening square bracket\n\t\t\t\t// We check if this is a standalone title,\n\t\t\t\t// like `[[MyTitle]]`. We treat those like\n\t\t\t\t// `\"MyTitle\"` or `MyTitle`. Not like a run.\n\t\t\t\tvar standaloneTitle = /\\[\\[([^\\]]+)\\]\\]/g;\n\t\t\t\tstandaloneTitle.lastIndex = p;\n\t\t\t\tvar alone = standaloneTitle.exec(filter);\n\t\t\t\tif (!alone || alone.index != p) {\n\t\t\t\t\t// It's a legit run\n\t\t\t\t\tp =parseFilterOperation(relinker,fromTitle,toTitle,filter,p,whitelist,options);\n\t\t\t\t\tif (p === undefined) {\n\t\t\t\t\t\t// The filter is malformed\n\t\t\t\t\t\t// We do nothing.\n\t\t\t\t\t\treturn undefined;\n\t\t\t\t\t}\n\t\t\t\t\tcontinue;\n\t\t\t\t}\n\t\t\t\tbracketTitle = alone[1];\n\t\t\t\toperandRegExp.lastIndex = standaloneTitle.lastIndex;\n\t\t\t\tval = alone[1];\n\t\t\t} else {\n\t\t\t\t// standalone Double quoted string, single\n\t\t\t\t// quoted string, or noquote ahead.\n\t\t\t\tval = match[3] || match[4] || match[5];\n\t\t\t}\n\t\t\t// From here on, we're dealing with a standalone title\n\t\t\t// expression. like `\"MyTitle\"` or `[[MyTitle]]`\n\t\t\t// We're much more flexible about relinking these.\n\t\t\tvar preference = undefined;\n\t\t\tif (match[3]) {\n\t\t\t\tpreference = '\"';\n\t\t\t} else if (match[4]) {\n\t\t\t\tpreference = \"'\";\n\t\t\t} else if (match[5]) {\n\t\t\t\tpreference = '';\n\t\t\t}\n\t\t\tif (val === fromTitle) {\n\t\t\t\tvar newVal = wrapTitle(toTitle, preference);\n\t\t\t\tif (newVal === undefined) {\n\t\t\t\t\tif (!options.placeholder) {\n\t\t\t\t\t\tthrow new CannotRelinkError();\n\t\t\t\t\t}\n\t\t\t\t\tnewVal = \"[<\"+options.placeholder.getPlaceholderFor(toTitle)+\">]\";\n\t\t\t\t\toptions.usedPlaceholder = true;\n\t\t\t\t}\n\t\t\t\tif (newVal[0] != '[') {\n\t\t\t\t\t// not bracket enclosed\n\t\t\t\t\t// this requires whitespace\n\t\t\t\t\t// arnound it\n\t\t\t\t\tif (noPrecedingWordBarrier && !match[1]) {\n\t\t\t\t\t\trelinker.add(' ', p, p);\n\t\t\t\t\t}\n\t\t\t\t\twordBarrierRequired = true;\n\t\t\t\t}\n\t\t\t\trelinker.add(newVal,p,operandRegExp.lastIndex);\n\t\t\t}\n\t\t\tp = operandRegExp.lastIndex;\n\t\t}\n\t}\n\treturn relinker.results();\n};\n\nfunction wrapTitle(value, preference) {\n\tvar choices = {\n\t\t\"\": function(v) {return !/[\\s\\[\\]]/.test(v); },\n\t\t\"[\": canBePrettyOperand,\n\t\t\"'\": function(v) {return v.indexOf(\"'\") < 0; },\n\t\t'\"': function(v) {return v.indexOf('\"') < 0; }\n\t};\n\tvar wrappers = {\n\t\t\"\": function(v) {return v; },\n\t\t\"[\": function(v) {return \"[[\"+v+\"]]\"; },\n\t\t\"'\": function(v) {return \"'\"+v+\"'\"; },\n\t\t'\"': function(v) {return '\"'+v+'\"'; }\n\t};\n\tif (choices[preference]) {\n\t\tif (choices[preference](value)) {\n\t\t\treturn wrappers[preference](value);\n\t\t}\n\t}\n\tfor (var quote in choices) {\n\t\tif (choices[quote](value)) {\n\t\t\treturn wrappers[quote](value);\n\t\t}\n\t}\n\t// No quotes will work on this\n\treturn undefined;\n}\n\nfunction parseFilterOperation(relinker, fromTitle, toTitle, filterString, p, whitelist, options) {\n\tvar nextBracketPos, operator;\n\t// Skip the starting square bracket\n\tif(filterString.charAt(p++) !== \"[\") {\n\t\t// Missing [ in filter expression\n\t\treturn undefined;\n\t}\n\t// Process each operator in turn\n\tdo {\n\t\toperator = {};\n\t\t// Check for an operator prefix\n\t\tif(filterString.charAt(p) === \"!\") {\n\t\t\tp++;\n\t\t}\n\t\t// Get the operator name\n\t\tnextBracketPos = filterString.substring(p).search(/[\\[\\{<\\/]/);\n\t\tif(nextBracketPos === -1) {\n\t\t\t// Missing [ in filter expression\n\t\t\treturn undefined;\n\t\t}\n\t\tnextBracketPos += p;\n\t\tvar bracket = filterString.charAt(nextBracketPos);\n\t\toperator.operator = filterString.substring(p,nextBracketPos);\n\n\t\t// Any suffix?\n\t\tvar colon = operator.operator.indexOf(':');\n\t\tif(colon > -1) {\n\t\t\toperator.suffix = operator.operator.substring(colon + 1);\n\t\t\toperator.operator = operator.operator.substring(0,colon) || \"field\";\n\t\t}\n\t\t// Empty operator means: title\n\t\telse if(operator.operator === \"\") {\n\t\t\toperator.operator = \"title\";\n\t\t}\n\n\t\tp = nextBracketPos + 1;\n\t\tswitch (bracket) {\n\t\t\tcase \"{\": // Curly brackets\n\t\t\t\tnextBracketPos = filterString.indexOf(\"}\",p);\n\t\t\t\tvar operand = filterString.substring(p,nextBracketPos);\n\t\t\t\tvar ref = $tw.utils.parseTextReference(operand);\n\t\t\t\tif (ref.title === fromTitle) {\n\t\t\t\t\tif(!canBePrettyIndirect(toTitle)) {\n\t\t\t\t\t\tthrow new CannotRelinkError();\n\t\t\t\t\t}\n\t\t\t\t\tref.title = toTitle;\n\t\t\t\t\tvar newRef = refHandler.toString(ref);\n\t\t\t\t\t// We don't check the whitelist.\n\t\t\t\t\t// All indirect operands convert.\n\t\t\t\t\trelinker.add(newRef,p,nextBracketPos);\n\t\t\t\t}\n\t\t\t\tbreak;\n\t\t\tcase \"[\": // Square brackets\n\t\t\t\tnextBracketPos = filterString.indexOf(\"]\",p);\n\t\t\t\tvar operand = filterString.substring(p,nextBracketPos);\n\t\t\t\t// Check if this is a relevant operator\n\t\t\t\tvar handler = fieldType(whitelist, operator);\n\t\t\t\tif (!handler) {\n\t\t\t\t\t// This operator isn't managed. Bye.\n\t\t\t\t\tbreak;\n\t\t\t\t}\n\t\t\t\tvar result = handler.relink(operand, fromTitle, toTitle, options);\n\t\t\t\tif (!result) {\n\t\t\t\t\t// The fromTitle wasn't in the operand.\n\t\t\t\t\tbreak;\n\t\t\t\t}\n\t\t\t\tvar wrapped;\n\t\t\t\tif (!canBePrettyOperand(result)) {\n\t\t\t\t\tif (!options.placeholder) {\n\t\t\t\t\t\tthrow new CannotRelinkError();\n\t\t\t\t\t}\n\t\t\t\t\tvar ph = options.placeholder.getPlaceholderFor(result);\n\t\t\t\t\twrapped = \"<\"+ph+\">\";\n\t\t\t\t\toptions.usedPlaceholder = true;\n\t\t\t\t} else {\n\t\t\t\t\twrapped = \"[\"+result+\"]\";\n\t\t\t\t}\n\t\t\t\trelinker.add(wrapped, p-1, nextBracketPos+1);\n\t\t\t\tbreak;\n\t\t\tcase \"<\": // Angle brackets\n\t\t\t\tnextBracketPos = filterString.indexOf(\">\",p);\n\t\t\t\tbreak;\n\t\t\tcase \"/\": // regexp brackets\n\t\t\t\tvar rex = /^((?:[^\\\\\\/]*|\\\\.)*)\\/(?:\\(([mygi]+)\\))?/g,\n\t\t\t\t\trexMatch = rex.exec(filterString.substring(p));\n\t\t\t\tif(rexMatch) {\n\t\t\t\t\tnextBracketPos = p + rex.lastIndex - 1;\n\t\t\t\t}\n\t\t\t\telse {\n\t\t\t\t\t// Unterminated regular expression\n\t\t\t\t\treturn undefined;\n\t\t\t\t}\n\t\t\t\tbreak;\n\t\t}\n\n\t\tif(nextBracketPos === -1) {\n\t\t\t// Missing closing bracket in filter expression\n\t\t\t// return undefined;\n\t\t}\n\t\tp = nextBracketPos + 1;\n\n\t} while(filterString.charAt(p) !== \"]\");\n\t// Skip the ending square bracket\n\tif(filterString.charAt(p++) !== \"]\") {\n\t\t// Missing ] in filter expression\n\t\treturn undefined;\n\t}\n\t// Return the parsing position\n\treturn p;\n}\n\n// Returns the relinker needed for a given operator, or returns undefined.\nfunction fieldType(whitelist, operator) {\n\treturn whitelist[operator.operator] ||\n\t       (operator.suffix &&\n\t        whitelist[operator.operator + \":\" + operator.suffix]);\n};\n\nfunction canBePrettyOperand(value) {\n\treturn value.indexOf(']') < 0;\n};\n\nfunction canBePrettyIndirect(value) {\n\treturn value.indexOf('}') < 0;\n};\n",
+            "module-type": "relinkfieldtype",
+            "title": "$:/plugins/flibbles/relink/js/fieldtypes/filter.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/fieldtypes/list.js": {
+            "text": "/*\\\nThis manages replacing titles that occur within stringLists, like,\n\nTiddlerA [[Tiddler with spaces]] [[Another Title]]\n\\*/\n\nvar CannotRelinkError = require(\"$:/plugins/flibbles/relink/js/errors.js\").CannotRelinkError;\n\nexports.name = \"list\";\n\n/**Returns undefined if no change was made.\n * Parameter: value can literally be a list. This can happen for builtin\n *            types 'list' and 'tag'. In those cases, we also return list.\n */\nexports.relink = function(value, fromTitle, toTitle, options) {\n\tvar isModified = false,\n\t\tactualList = false,\n\t\tlist;\n\tif (typeof value !== \"string\") {\n\t\t// Not a string. Must be a list.\n\t\t// clone it, since we may make changes to this possibly\n\t\t// frozen list.\n\t\tlist = (value || []).slice(0);\n\t\tactualList = true;\n\t} else {\n\t\tlist = $tw.utils.parseStringArray(value || \"\");\n\t}\n\t$tw.utils.each(list,function (title,index) {\n\t\tif(title === fromTitle) {\n\t\t\tlist[index] = toTitle;\n\t\t\tisModified = true;\n\t\t}\n\t});\n\tif (isModified) {\n\t\t// It doesn't parse correctly alone, it won't\n\t\t// parse correctly in any list.\n\t\tif (!canBeListItem(toTitle)) {\n\t\t\tthrow new CannotRelinkError();\n\t\t}\n\t\tif (actualList) {\n\t\t\treturn list;\n\t\t} else {\n\t\t\treturn $tw.utils.stringifyList(list);\n\t\t}\n\t}\n\treturn undefined;\n};\n\nfunction canBeListItem(value) {\n\tvar regexp = /\\]\\][^\\S\\xA0]/m;\n\treturn !regexp.test(value);\n};\n",
+            "module-type": "relinkfieldtype",
+            "title": "$:/plugins/flibbles/relink/js/fieldtypes/list.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/fieldtypes/reference.js": {
+            "text": "/*\\\nThis manages replacing titles that occur inside text references,\n\ntiddlerTitle\ntiddlerTitle!!field\n!!field\ntiddlerTitle##propertyIndex\n\\*/\n\nvar CannotRelinkError = require(\"$:/plugins/flibbles/relink/js/errors.js\").CannotRelinkError;\n\nexports.name = \"reference\";\n\nexports.relink = function(value, fromTitle, toTitle, options) {\n\tvar reference = $tw.utils.parseTextReference(value);\n\tif (reference.title !== fromTitle) {\n\t\treturn undefined;\n\t}\n\treference.title = toTitle;\n\treturn exports.toString(reference);\n};\n\nexports.toString = function(textReference) {\n\tvar title = textReference.title || '';\n\tif (!exports.canBePretty(title)) {\n\t\tthrow new CannotRelinkError();\n\t}\n\tif (textReference.field) {\n\t\treturn title + \"!!\" + textReference.field;\n\t} else if (textReference.index) {\n\t\treturn title + \"##\" + textReference.index;\n\t}\n\treturn title;\n};\n\nexports.canBePretty = function(title)  {\n\treturn title.indexOf(\"!!\") < 0 && title.indexOf(\"##\") < 0;\n};\n",
+            "module-type": "relinkfieldtype",
+            "title": "$:/plugins/flibbles/relink/js/fieldtypes/reference.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/fieldtypes/title.js": {
+            "text": "/*\\\nThis specifies logic for replacing a single-tiddler field. This is the\nsimplest kind of field type. One title swaps out for the other.\n\\*/\n\n// NOTE TO MODDERS: If you're making your own field types, the name must be\n//                  alpha characters only.\nexports.name = 'title';\n\n/**Returns undefined if no change was made.\n */\nexports.relink = function(value, fromTitle, toTitle, options) {\n\tif (value === fromTitle) {\n\t\treturn toTitle;\n\t}\n\treturn undefined;\n};\n\n// This is legacy support for when 'title' was known as 'field'\nexports.aliases = ['field', 'yes'];\n",
+            "module-type": "relinkfieldtype",
+            "title": "$:/plugins/flibbles/relink/js/fieldtypes/title.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/relinkoperations/fields.js": {
+            "text": "/*\\\n\nHandles all fields specified in the plugin configuration. Currently, this\nonly supports single-value fields.\n\n\\*/\n\n/*jslint node: false, browser: true */\n/*global $tw: false */\n\"use strict\";\n\nvar settings = require('$:/plugins/flibbles/relink/js/settings.js');\nvar log = require('$:/plugins/flibbles/relink/js/language.js').logRelink;\n\nexports['fields'] = function(tiddler, fromTitle, toTitle, changes, options) {\n\tvar fields = settings.getFields(options);\n\t$tw.utils.each(fields, function(handler, field) {\n\t\tvar input = tiddler.fields[field];\n\t\tvar value = handler.relink(input, fromTitle, toTitle, options);\n\t\tif (value !== undefined) {\n\t\t\tlog(\"field\", {\n\t\t\t\tfrom: fromTitle,\n\t\t\t\tto: toTitle,\n\t\t\t\ttiddler: tiddler.fields.title,\n\t\t\t\tfield: descriptor(field)\n\t\t\t}, options);\n\t\t\tchanges[field] = value;\n\t\t}\n\t});\n};\n\nfunction descriptor(field) {\n\tif (field === \"tags\") {\n\t\treturn \"tags\";\n\t} else {\n\t\treturn field + \" field\" ;\n\t}\n};\n",
+            "module-type": "relinkoperator",
+            "title": "$:/plugins/flibbles/relink/js/relinkoperations/fields.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/relinkoperations/text.js": {
+            "text": "/*\\\n\nDepending on the tiddler type, this will apply textOperators which may\nrelink titles within the body.\n\n\\*/\n\n/*jslint node: false, browser: true */\n/*global $tw: false */\n\"use strict\";\n\nvar defaultOperator = \"text/vnd.tiddlywiki\";\n\nvar textOperators = Object.create(null);\n$tw.modules.applyMethods('relinktextoperator', textOperators);\n\nexports['text'] = function(tiddler, fromTitle, toTitle, changes, options) {\n\tvar text = tiddler.fields.text,\n\t\tbuilder = [],\n\t\tbuildIndex = 0;\n\tif (text && text.indexOf(fromTitle) >= 0) {\n\t\tvar type = tiddler.fields.type || defaultOperator;\n\t\tif (textOperators[type]) {\n\t\t\ttextOperators[type].call(this, tiddler, fromTitle, toTitle, changes, options);\n\t\t}\n\t}\n};\n",
+            "module-type": "relinkoperator",
+            "title": "$:/plugins/flibbles/relink/js/relinkoperations/text.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext.js": {
+            "text": "/*\\\n\nChecks for fromTitle in a tiddler's text. If found, sees if it's relevant,\nand tries to swap it out if it is.\n\n\\*/\n\n/*jslint node: false, browser: true */\n/*global $tw: false */\n\"use strict\";\n\nvar type = 'text/vnd.tiddlywiki';\nvar WikiParser = require(\"$:/core/modules/parsers/wikiparser/wikiparser.js\")[type];\nvar Rebuilder = require(\"$:/plugins/flibbles/relink/js/utils/rebuilder.js\");\nvar Widget = require(\"$:/core/modules/widgets/widget.js\").widget;\n\nvar rules = Object.create(null);\n\n$tw.modules.forEachModuleOfType(\"relinkwikitextrule\", function(title, exports) {\n\tvar names = exports.name;\n\tif (typeof names === \"string\") {\n\t\tnames = [names];\n\t}\n\tfor (var i = 0; i < names.length; i++) {\n\t\trules[names[i]] = exports;\n\t}\n});\n\nfunction WikiRelinker(text, title, toTitle, options) {\n\tWikiParser.call(this, null, text, options);\n\tif (!this.relinkMethodsInjected) {\n\t\t$tw.utils.each([this.pragmaRuleClasses, this.blockRuleClasses, this.inlineRuleClasses], function(classList) {\n\t\t\tfor (var name in classList) {\n\t\t\t\tif (rules[name]) {\n\t\t\t\t\tdelete rules[name].name;\n\t\t\t\t\t$tw.utils.extend(classList[name].prototype, rules[name]);\n\t\t\t\t}\n\t\t\t}\n\t\t});\n\t\tWikiRelinker.prototype.relinkMethodsInjected = true;\n\t}\n\tthis.title = title;\n\tthis.toTitle = toTitle;\n\tthis.inlineRules = this.blockRules.concat(this.pragmaRules, this.inlineRules);\n\t// We work through relinkRules so we can change it later.\n\t// relinkRules is inlineRules so it gets touched up by amendRules().\n\tthis.relinkRules = this.inlineRules;\n\tthis.placeholders = Object.create(null);\n\tthis.reverseMap = Object.create(null);\n\tthis.knownMacros = Object.create(null);\n\tthis.widget = undefined;\n};\n\nWikiRelinker.prototype = Object.create(WikiParser.prototype);\nWikiRelinker.prototype.parsePragmas = function() {return []; };\nWikiRelinker.prototype.parseInlineRun = function() {};\nWikiRelinker.prototype.parseBlocks = function() {};\n\nWikiRelinker.prototype.getPlaceholderFor = function(value, category) {\n\tvar placeholder = this.reverseMap[value];\n\tif (placeholder) {\n\t\treturn placeholder;\n\t}\n\tvar number = 0;\n\tvar prefix = \"relink-\"\n\tif (category && category !== \"title\") {\n\t\t// I don't like \"relink-title-1\". \"relink-1\" should be for\n\t\t// titles. lists, and filters can have descriptors though.\n\t\tprefix += category + \"-\";\n\t}\n\tdo {\n\t\tnumber += 1;\n\t\tplaceholder = prefix + number;\n\t} while (this.knownMacros[placeholder]);\n\tthis.placeholders[placeholder] = value;\n\tthis.reverseMap[value] = placeholder;\n\tthis.reserve(placeholder);\n\treturn placeholder;\n};\n\nWikiRelinker.prototype.addWidget = function(widget) {\n\tthis.widget = widget;\n\twhile (this.widget.children.length > 0) {\n\t\tthis.widget = this.widget.children[0];\n\t}\n};\n\nWikiRelinker.prototype.getVariableWidget = function() {\n\tif (!this.widget) {\n\t\tthis.widget = this.wiki.relinkGlobalMacros();\n\t\tvar parentWidget = new Widget({}, {parentWidget: this.widget});\n\t\tparentWidget.setVariable(\"currentTiddler\", this.title);\n\t\tvar widget = new Widget({}, {parentWidget: parentWidget});\n\t\tthis.addWidget(widget);\n\t}\n\treturn this.widget;\n};\n\nWikiRelinker.prototype.reserve = function(macro) {\n\tthis.knownMacros[macro] = true;\n};\n\nWikiRelinker.prototype.getPreamble = function() {\n\tvar results = [];\n\tfor (var name in this.placeholders) {\n\t\tvar val = this.placeholders[name];\n\t\tresults.push(\"\\\\define \"+name+\"() \"+val+\"\\n\");\n\t}\n\tif (results.length > 0) {\n\t\treturn results.join('');\n\t} else {\n\t\treturn undefined;\n\t}\n};\n\nexports[type] = function(tiddler, fromTitle, toTitle, changes, options) {\n\tvar text = tiddler.fields.text,\n\t\tbuilder = new Rebuilder(text),\n\t\tparser = new WikiRelinker(text, tiddler.fields.title, toTitle, options),\n\t\tmatchingRule;\n\twhile (matchingRule = parser.findNextMatch(parser.relinkRules, parser.pos)) {\n\t\tif (matchingRule.rule.relink) {\n\t\t\tvar newSegment = matchingRule.rule.relink(tiddler, text, fromTitle, toTitle, options);\n\t\t\tif (newSegment !== undefined) {\n\t\t\t\tbuilder.add(newSegment, matchingRule.matchIndex, parser.pos);\n\t\t\t}\n\t\t} else {\n\t\t\tif (matchingRule.rule.matchRegExp !== undefined) {\n\t\t\t\tparser.pos = matchingRule.rule.matchRegExp.lastIndex;\n\t\t\t} else {\n\t\t\t\t// We can't easily determine the end of this\n\t\t\t\t// rule match. We'll \"parse\" it so that\n\t\t\t\t// parser.pos gets updated, but we throw away\n\t\t\t\t// the results.\n\t\t\t\tmatchingRule.rule.parse();\n\t\t\t}\n\t\t}\n\t}\n\tif (builder.changed()) {\n\t\tbuilder.prepend(parser.getPreamble());\n\t\tchanges.text = builder.results();\n\t}\n};\n",
+            "module-type": "relinktextoperator",
+            "title": "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/comment.js": {
+            "text": "/*\\\nmodule-type: relinkwikitextrule\n\nHandles comment blocks. Or rather //doesn't// handle them, since we should\nignore their contents.\n\n\"<!-- [[Renamed Title]] -->\" will remain unchanged.\n\n\\*/\n\nexports.name = [\"commentinline\", \"commentblock\"];\n\nexports.relink = function(tiddler, text, fromTitle, toTitle, options) {\n\tthis.parser.pos = this.endMatchRegExp.lastIndex;\n\treturn undefined;\n};\n",
+            "module-type": "relinkwikitextrule",
+            "title": "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/comment.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/filteredtransclude.js": {
+            "text": "/*\\\nmodule-type: relinkwikitextrule\n\nHandles replacement of filtered transclusions in wiki text like,\n\n{{{ [tag[docs]] }}}\n{{{ [tag[docs]] |tooltip}}}\n{{{ [tag[docs]] ||TemplateTitle}}}\n{{{ [tag[docs]] |tooltip||TemplateTitle}}}\n{{{ [tag[docs]] }}width:40;height:50;}.class.class\n\nThis renames both the list and the template field.\n\n\\*/\n\nexports.name = ['filteredtranscludeinline', 'filteredtranscludeblock'];\n\nvar filterHandler = require(\"$:/plugins/flibbles/relink/js/settings\").getRelinker('filter');\nvar log = require('$:/plugins/flibbles/relink/js/language.js').logRelink;\nvar utils = require(\"./utils.js\");\n\nexports.relink = function(tiddler, text, fromTitle, toTitle, options) {\n\tvar m = this.match;\n\t\tfilter = m[1],\n\t\ttooltip = m[2],\n\t\ttemplate = m[3],\n\t\tstyle = m[4],\n\t\tclasses = m[5],\n\t\tparser = this.parser,\n\t\tlogArguments = {\n\t\t\tfrom: fromTitle,\n\t\t\tto: toTitle,\n\t\t\ttiddler: tiddler.fields.title\n\t\t};\n\tparser.pos = this.matchRegExp.lastIndex;\n\tvar modified = false;\n\tif ($tw.utils.trim(template) === fromTitle) {\n\t\t// preserves user-inputted whitespace\n\t\ttemplate = template.replace(fromTitle, toTitle);\n\t\tmodified = true;\n\t}\n\tvar extendedOptions = $tw.utils.extend({placeholder: this.parser}, options);\n\tvar relinkedFilter = filterHandler.relink(filter, fromTitle, toTitle, extendedOptions);\n\tvar message = \"filteredtransclude\";\n\tif (extendedOptions.usedPlaceholder) {\n\t\tmessage = \"filteredtransclude-placeholder\";\n\t}\n\tif (relinkedFilter !== undefined) {\n\t\tfilter = relinkedFilter;\n\t\tmodified = true;\n\t}\n\tif (!modified) {\n\t\treturn undefined;\n\t}\n\tif (canBePretty(filter) && canBePrettyTemplate(template)) {\n\t\tlog(message, logArguments, options);\n\t\treturn prettyList(filter, tooltip, template, style, classes);\n\t}\n\tmessage = message + \"-widget\";\n\tif (classes !== undefined) {\n\t\tclasses = classes.split('.').join(' ');\n\t}\n\tfunction wrap(name, value, treatAsTitle) {\n\t\tif (!value) {\n\t\t\treturn '';\n\t\t}\n\t\tvar wrappedValue = utils.wrapAttributeValue(value);\n\t\tif (wrappedValue === undefined) {\n\t\t\tvar category = treatAsTitle ? undefined : name;\n\t\t\twrappedValue = \"<<\"+parser.getPlaceholderFor(value,category)+\">>\";\n\t\t\tmessage = \"filteredtransclude-placeholder-widget\";\n\t\t}\n\t\treturn \" \"+name+\"=\"+wrappedValue;\n\t};\n\tvar widget = [\n\t\t\"<$list\",\n\t\twrap(\"filter\", filter),\n\t\twrap(\"tooltip\", tooltip),\n\t\twrap(\"template\", template, true),\n\t\twrap(\"style\", style),\n\t\twrap(\"itemClass\", classes),\n\t\t\"/>\"\n\t].join('');\n\tlog(message, logArguments, options);\n\treturn widget;\n};\n\nfunction canBePretty(filter) {\n\treturn filter.indexOf('|') < 0 && filter.indexOf('}}') < 0;\n};\n\nfunction canBePrettyTemplate(template) {\n\treturn !template || (\n\t\ttemplate.indexOf('|') < 0\n\t\t&& template.indexOf('{') < 0\n\t\t&& template.indexOf('}') < 0);\n};\n\nfunction prettyList(filter, tooltip, template, style, classes) {\n\tif (tooltip === undefined) {\n\t\ttooltip = '';\n\t} else {\n\t\ttooltip = \"|\" + tooltip;\n\t}\n\tif (template === undefined) {\n\t\ttemplate = '';\n\t} else {\n\t\ttemplate = \"||\" + template;\n\t}\n\tif (classes === undefined) {\n\t\tclasses = '';\n\t} else {\n\t\tclasses = \".\" + classes;\n\t}\n\tstyle = style || '';\n\treturn \"{{{\"+filter+tooltip+template+\"}}\"+style+\"}\"+classes;\n};\n",
+            "module-type": "relinkwikitextrule",
+            "title": "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/filteredtransclude.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/html.js": {
+            "text": "/*\\\nmodule-type: relinkwikitextrule\n\nHandles replacement in attributes of widgets and html elements\nThis is configurable to select exactly which attributes of which elements\nshould be changed.\n\n<$link to=\"TiddlerTitle\" />\n\n\\*/\n\nvar utils = require(\"./utils.js\");\nvar Rebuilder = require(\"$:/plugins/flibbles/relink/js/utils/rebuilder\");\nvar html = require(\"$:/core/modules/parsers/wikiparser/rules/html.js\");\nvar log = require('$:/plugins/flibbles/relink/js/language.js').logRelink;\nvar settings = require('$:/plugins/flibbles/relink/js/settings.js');\nvar refHandler = require(\"$:/plugins/flibbles/relink/js/fieldtypes/reference\");\nvar filterHandler = require(\"$:/plugins/flibbles/relink/js/settings\").getRelinker('filter');\nvar macrocall = require(\"./macrocall.js\");\nvar CannotRelinkError = require(\"$:/plugins/flibbles/relink/js/errors.js\").CannotRelinkError;\n\nexports.name = \"html\";\n\nexports.relink = function(tiddler, text, fromTitle, toTitle, options) {\n\tvar managedElement = settings.getAttributes(options)[this.nextTag.tag],\n\t\tbuilder = new Rebuilder(text, this.nextTag.start);\n\tvar importFilterAttr;\n\tfor (var attributeName in this.nextTag.attributes) {\n\t\tvar attr = this.nextTag.attributes[attributeName];\n\t\tvar nextEql = text.indexOf('=', attr.start);\n\t\t// This is the rare case of changing tiddler\n\t\t// \"true\" to something else when \"true\" is\n\t\t// implicit, like <$link to /> We ignore those.\n\t\tif (nextEql < 0 || nextEql > attr.end) {\n\t\t\tcontinue;\n\t\t}\n\t\tif (this.nextTag.tag === \"$importvariables\" && attributeName === \"filter\") {\n\t\t\timportFilterAttr = attr;\n\t\t}\n\t\tvar oldValue, quote, logMessage = \"attribute\";\n\t\tif (attr.type === \"string\") {\n\t\t\tvar handler = getAttributeHandler(this.nextTag, attributeName, options);\n\t\t\tif (!handler) {\n\t\t\t\t// We don't manage this attribute. Bye.\n\t\t\t\tcontinue;\n\t\t\t}\n\t\t\tvar extendedOptions = $tw.utils.extend({placeholder: this.parser}, options);\n\t\t\toldValue = attr.value;\n\t\t\tvar value = handler.relink(attr.value, fromTitle, toTitle, extendedOptions);\n\t\t\tif (value === undefined) {\n\t\t\t\tcontinue;\n\t\t\t}\n\t\t\tif (extendedOptions.usedPlaceholder) {\n\t\t\t\tlogMessage = \"attribute-placeholder\";\n\t\t\t}\n\t\t\tquote = utils.determineQuote(text, attr);\n\t\t\tattr.quotedValue = utils.wrapAttributeValue(value,quote);\n\t\t\tif (attr.quotedValue === undefined) {\n\t\t\t\t// The value was unquotable. We need to make\n\t\t\t\t// a macro in order to replace it.\n\t\t\t\tvalue = this.parser.getPlaceholderFor(value,handler.name)\n\t\t\t\tattr.type = \"macro\";\n\t\t\t\tattr.quotedValue = \"<<\"+value+\">>\";\n\t\t\t\tlogMessage = \"attribute-placeholder\";\n\t\t\t}\n\t\t\tattr.value = value;\n\t\t} else if (attr.type === \"indirect\") {\n\t\t\tif (toTitle.indexOf(\"}\") >= 0) {\n\t\t\t\t// Impossible replacement\n\t\t\t\tthrow new CannotRelinkError();\n\t\t\t}\n\t\t\toldValue = attr.textReference;\n\t\t\tquote = \"{{\";\n\t\t\tvar ref = $tw.utils.parseTextReference(attr.textReference);\n\t\t\tif (ref.title !== fromTitle) {\n\t\t\t\tcontinue;\n\t\t\t}\n\t\t\tref.title = toTitle;\n\t\t\tattr.textReference = refHandler.toString(ref);\n\t\t\tattr.quotedValue = \"{{\"+attr.textReference+\"}}\";\n\t\t} else if (attr.type === \"filtered\") {\n\t\t\tvar extendedOptions = $tw.utils.extend({placeholder: this.parser}, options);\n\t\t\toldValue = attr.filter\n\t\t\tvar filter = filterHandler.relink(attr.filter, fromTitle, toTitle, extendedOptions);\n\t\t\tif (filter === undefined) {\n\t\t\t\tcontinue;\n\t\t\t}\n\t\t\tif (!canBeFilterValue(filter)) {\n\t\t\t\t// Although I think we can actually do this one.\n\t\t\t\tthrow new CannotRelinkError();\n\t\t\t}\n\t\t\tattr.filter = filter;\n\t\t\tattr.quotedValue = \"{{{\" + filter + \"}}}\";\n\t\t\tquote = \"{{{\";\n\t\t} else if (attr.type === \"macro\") {\n\t\t\tvar macro = attr.value;\n\t\t\toldValue = attr.value;\n\t\t\tvar newMacro = macrocall.relinkMacroInvocation(macro, text, this.parser, fromTitle, toTitle, options);\n\t\t\tif (newMacro === undefined) {\n\t\t\t\tcontinue;\n\t\t\t}\n\t\t\tif (macrocall.mustBeAWidget(newMacro)) {\n\t\t\t\tthrow new CannotRelinkError();\n\t\t\t}\n\t\t\tattr.value = newMacro;\n\t\t\t// TODO: Let's not hack like this. attr.value is\n\t\t\t// expected to be a string of the unquoted value below.\n\t\t\t// Make this better when I can.\n\t\t\toldValue.length = (macro.end-macro.start)-4;\n\t\t\tquote = \"<<\";\n\t\t\tattr.quotedValue = macrocall.macroToString(newMacro, text, this.parser, options);\n\t\t} else {\n\t\t\tcontinue;\n\t\t}\n\t\t// account for the quote if it's there.\n\t\t// We count backwards from the end to preserve whitespace\n\t\tvar valueStart = attr.end\n\t\t               - (quote.length*2)\n\t\t               - oldValue.length;\n\t\tbuilder.add(attr.quotedValue, valueStart, attr.end);\n\t\tvar logArguments = {\n\t\t\tfrom: fromTitle,\n\t\t\tto: toTitle,\n\t\t\ttiddler: tiddler.fields.title,\n\t\t\telement: this.nextTag.tag,\n\t\t\tattribute: attributeName\n\t\t};\n\t\tlog(logMessage, logArguments, options);\n\t}\n\tif (importFilterAttr) {\n\t\tvar importFilter = computeAttribute(importFilterAttr, this.parser, options);\n\t\tvar parentWidget = this.parser.getVariableWidget();\n\t\tvar varHolder = options.wiki.relinkGenerateVariableWidget(importFilter, parentWidget);\n\t\tthis.parser.addWidget(varHolder);\n\t}\n\tthis.parser.pos = this.nextTag.end;\n\treturn builder.results(this.nextTag.end);\n};\n\n/** Returns the field handler for the given attribute of the given widget.\n *  If this returns undefined, it means we don't handle it. So skip.\n */\nfunction getAttributeHandler(widget, attributeName, options) {\n\tif (widget.tag === \"$macrocall\") {\n\t\tvar nameAttr = widget.attributes[\"$name\"];\n\t\tvar macro = settings.getMacros(options)[nameAttr.value];\n\t\tif (macro) {\n\t\t\treturn macro[attributeName];\n\t\t}\n\t} else {\n\t\tvar element = settings.getAttributes(options)[widget.tag];\n\t\tif (element) {\n\t\t\treturn element[attributeName];\n\t\t}\n\t}\n\treturn undefined;\n};\n\nfunction computeAttribute(attribute, parser, options) {\n\tvar value;\n\tif(attribute.type === \"filtered\") {\n\t\tvar parentWidget = parser.getVariableWidget();\n\t\tvalue = options.wiki.filterTiddlers(attribute.filter,parentWidget)[0] || \"\";\n\t} else if(attribute.type === \"indirect\") {\n\t\tvar parentWidget = parser.getVariableWidget();\n\t\tvalue = options.wiki.getTextReference(attribute.textReference,\"\",parentWidget.variables.currentTiddler.value);\n\t} else if(attribute.type === \"macro\") {\n\t\tvar parentWidget = parser.getVariableWidget();\n\t\tvalue = parentWidget.getVariable(attribute.value.name,{params: attribute.value.params});\n\t} else { // String attribute\n\t\tvalue = attribute.value;\n\t}\n\treturn value;\n};\n\nfunction canBeFilterValue(value) {\n\treturn value.indexOf(\"}}}\") < 0 && value.substr(value.length-2) !== '}}';\n};\n",
+            "module-type": "relinkwikitextrule",
+            "title": "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/html.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/import.js": {
+            "text": "/*\\\nmodule-type: relinkwikitextrule\n\nHandles import pragmas\n\n\\import [tag[MyTiddler]]\n\\*/\n\nvar settings = require(\"$:/plugins/flibbles/relink/js/settings.js\");\nvar log = require(\"$:/plugins/flibbles/relink/js/language.js\").logRelink;\nvar filterRelinker = settings.getRelinker('filter');\n\nexports.name = \"import\";\n\nexports.relink = function(tiddler, text, fromTitle, toTitle, options) {\n\t// In this one case, I'll let the parser parse out the filter and move\n\t// the ptr.\n\tvar start = this.matchRegExp.lastIndex;\n\tvar parseTree = this.parse();\n\tvar filter = parseTree[0].attributes.filter.value;\n\n\tvar extendedOptions = $tw.utils.extend({placeholder: this.parser},options);\n\tvar value = filterRelinker.relink(filter, fromTitle, toTitle, extendedOptions);\n\tvar rtn = undefined;\n\tif (value !== undefined) {\n\t\tvar message = extendedOptions.usedPlaceholder ? \"import-placeholder\" : \"import\";\n\t\tlog(message, {\n\t\t\tfrom: fromTitle,\n\t\t\tto: toTitle,\n\t\t\ttiddler: tiddler.fields.title\n\t\t}, options);\n\t\tvar newline = text.substring(start+filter.length, this.parser.pos);\n\t\tfilter = value;\n\t\trtn = \"\\\\import \" + value + newline;\n\t}\n\n\t// Before we go, we need to actually import the variables\n\t// it's calling for.\n\tvar parentWidget = this.parser.getVariableWidget();\n\tvar variableHolder = options.wiki.relinkGenerateVariableWidget(filter, parentWidget);\n\tthis.parser.addWidget(variableHolder);\n\n\treturn rtn;\n};\n",
+            "module-type": "relinkwikitextrule",
+            "title": "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/import.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/macrocall.js": {
+            "text": "/*\\\nmodule-type: relinkwikitextrule\n\nHandles macro calls.\n\n<<myMacro '[[MyFilter]]' 'myTitle'>>\n\n\\*/\n\nvar utils = require(\"./utils.js\");\nvar Rebuilder = require(\"$:/plugins/flibbles/relink/js/utils/rebuilder\");\nvar log = require('$:/plugins/flibbles/relink/js/language.js').logRelink;\nvar settings = require('$:/plugins/flibbles/relink/js/settings.js');\nvar CannotFindMacroDefError = require(\"$:/plugins/flibbles/relink/js/errors.js\").CannotFindMacroDefError;\n\nexports.name = [\"macrocallinline\", \"macrocallblock\"];\n\nexports.relink = function(tiddler, text, fromTitle, toTitle, options) {\n\t// Get all the details of the match\n\tvar macroName = this.match[1],\n\t\tparamString = this.match[2],\n\t\tmacroText = this.match[0];\n\t// Move past the macro call\n\tthis.parser.pos = this.matchRegExp.lastIndex;\n\tvar start = this.matchRegExp.lastIndex - this.match[0].length;\n\tvar managedMacro = settings.getMacros(options)[macroName];\n\tif (!managedMacro) {\n\t\t// We don't manage this macro. Bye.\n\t\treturn undefined;\n\t}\n\tvar offset = macroName.length+2;\n\toffset = $tw.utils.skipWhiteSpace(macroText, offset);\n\tvar params = parseParams(paramString, offset+start);\n\tvar macroInfo = {\n\t\tname: macroName,\n\t\tstart: start,\n\t\tend: this.matchRegExp.lastIndex,\n\t\tparams: params\n\t};\n\tvar results = this.relinkMacroInvocation(macroInfo, text, this.parser, fromTitle, toTitle, options);\n\tif (results) {\n\t\treturn this.macroToString(results, text, this.parser, options);\n\t} else {\n\t\treturn undefined;\n\t}\n};\n\n/**Processes the given macro,\n * macro: {name:, params:, start:, end:}\n * each parameters: {name:, end:, value:}\n * Macro invocation returned is the same, but relinked, and may have new keys:\n * parameters: {type: macro, start:, newValue: (quoted replacement value)}\n */\nexports.relinkMacroInvocation = function(macro, text, parser, fromTitle, toTitle, options) {\n\tvar managedMacro = settings.getMacros(options)[macro.name];\n\tvar modified = false;\n\tif (!managedMacro) {\n\t\t// We don't manage this macro. Bye.\n\t\treturn undefined;\n\t}\n\tif (macro.params.every(function(p) {\n\t\treturn p.value.indexOf(fromTitle) < 0;\n\t})) {\n\t\t// We cut early if the fromTitle doesn't even appear\n\t\t// anywhere in the title. This is to avoid any headache\n\t\t// about finding macro definitions (and any resulting\n\t\t// exceptions if there isn't even a title to replace.\n\t\treturn undefined;\n\t}\n\tvar outMacro = $tw.utils.extend({}, macro);\n\toutMacro.params = macro.params.slice();\n\tfor (var managedArg in managedMacro) {\n\t\tvar index = getParamIndexWithinMacrocall(macro.name, managedArg, macro.params, parser, options);\n\t\tif (index < 0) {\n\t\t\t// this arg either was not supplied, or we can't find\n\t\t\t// the definition, so we can't tie it to an anonymous\n\t\t\t// argument. Either way, move on to the next.\n\t\t\tcontinue;\n\t\t}\n\t\tvar param = macro.params[index];\n\t\tvar handler = managedMacro[managedArg];\n\t\tvar extendedOptions = $tw.utils.extend({placeholder: parser}, options);\n\t\tvar value = handler.relink(param.value, fromTitle, toTitle, extendedOptions);\n\t\tif (value === undefined) {\n\t\t\tcontinue;\n\t\t}\n\t\tvar quote = utils.determineQuote(text, param);\n\t\tvar quoted = utils.wrapAttributeValue(value, quote, ['', \"'\", '\"', '[[', '\"\"\"']);\n\t\tvar newParam = $tw.utils.extend({}, param);\n\t\tif (quoted === undefined) {\n\t\t\tvar ph = parser.getPlaceholderFor(value,handler.name);\n\t\t\tnewParam.newValue = \"<<\"+ph+\">>\";\n\t\t\tnewParam.type = \"macro\";\n\t\t} else {\n\t\t\tnewParam.start = newParam.end - (newParam.value.length + (quote.length*2));\n\t\t\tnewParam.value = value;\n\t\t\tnewParam.newValue = quoted;\n\t\t}\n\t\toutMacro.params[index] = newParam;\n\t\tmodified = true;\n\t}\n\tif (modified) {\n\t\treturn outMacro;\n\t}\n\treturn undefined;\n};\n\nexports.mustBeAWidget = function(macro) {\n\tfor (var i = 0; i < macro.params.length; i++) {\n\t\tif (macro.params[i].type === \"macro\") {\n\t\t\treturn true;\n\t\t}\n\t}\n\treturn false\n};\n\n/**Given a macro object ({name:, params:, start: end:}), and the text where\n * it was parsed from, returns a new macro that maintains any syntactic\n * structuring.\n */\nexports.macroToString = function(macro, text, parser, options) {\n\tif (exports.mustBeAWidget(macro)) {\n\t\tvar names = getParamNames(macro.name, macro.params, parser, options);\n\t\tvar attrs = [];\n\t\tfor (var i = 0; i < macro.params.length; i++) {\n\t\t\tvar p = macro.params[i];\n\t\t\tvar val;\n\t\t\tif (p.newValue) {\n\t\t\t\tval = p.newValue;\n\t\t\t} else {\n\t\t\t\tval = utils.wrapAttributeValue(p.value);\n\t\t\t}\n\t\t\tattrs.push(\" \"+names[i]+\"=\"+val);\n\t\t}\n\t\treturn \"<$macrocall $name=\"+utils.wrapAttributeValue(macro.name)+attrs.join('')+\"/>\";\n\t} else {\n\t\tvar builder = new Rebuilder(text, macro.start);\n\t\tfor (var i = 0; i < macro.params.length; i++) {\n\t\t\tvar param = macro.params[i];\n\t\t\tif (param.newValue) {\n\t\t\t\tbuilder.add(param.newValue, param.start, param.end);\n\t\t\t}\n\t\t}\n\t\treturn builder.results(macro.end);\n\t}\n};\n\nfunction getParamIndexWithinMacrocall(macroName, param, params, parser, options) {\n\tvar index, i;\n\tfor (i = 0; i < params.length; i++) {\n\t\tif (params[i].name === param) {\n\t\t\treturn i;\n\t\t}\n\t}\n\tvar expectedIndex = indexOfParameterDef(macroName, param, parser, options);\n\t// We've got to skip over all the named parameter instances.\n\tif (expectedIndex >= 0) {\n\t\tvar anonI = 0;\n\t\tfor (i = 0; i < params.length; i++) {\n\t\t\tif (params[i].name === undefined) {\n\t\t\t\tif (anonI === expectedIndex) {\n\t\t\t\t\treturn i;\n\t\t\t\t}\n\t\t\t\tanonI++;\n\t\t\t} else {\n\t\t\t\tvar indexOfOther = indexOfParameterDef(macroName, params[i].name, parser, options);\n\t\t\t\tif (indexOfOther < expectedIndex) {\n\t\t\t\t\tanonI++;\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\treturn -1;\n};\n\n// Looks up the definition of a macro, and figures out what the expected index\n// is for the given parameter.\nfunction indexOfParameterDef(macroName, paramName, parser, options) {\n\tvar def = getDefinition(macroName, parser, options);\n\tvar params = def.params || [];\n\tfor (var i = 0; i < params.length; i++) {\n\t\tif (params[i].name === paramName) {\n\t\t\treturn i;\n\t\t}\n\t}\n\treturn -1;\n};\n\nfunction getParamNames(macroName, params, parser, options) {\n\tvar used = Object.create(null);\n\tvar rtn = new Array(params.length);\n\tvar anonsExist = false;\n\tvar i;\n\tfor (i = 0; i < params.length; i++) {\n\t\tvar name = params[i].name;\n\t\tif (name) {\n\t\t\trtn[i] = name;\n\t\t\tused[name] = true;\n\t\t} else {\n\t\t\tanonsExist = true;\n\t\t}\n\t}\n\tif (anonsExist) {\n\t\tvar defParams = getDefinition(macroName, parser, options).params || [];\n\t\tvar defPtr = 0;\n\t\tfor (i = 0; i < params.length; i++) {\n\t\t\tif (rtn[i] === undefined) {\n\t\t\t\twhile(defPtr < defParams.length && used[defParams[defPtr].name]) {\n\t\t\t\t\tdefPtr++;\n\t\t\t\t}\n\t\t\t\tif (defPtr >= defParams.length) {\n\t\t\t\t\tbreak;\n\t\t\t\t}\n\t\t\t\trtn[i] = defParams[defPtr].name;\n\t\t\t\tused[defParams[defPtr].name] = true;\n\t\t\t}\n\t\t}\n\t}\n\treturn rtn;\n};\n\n/** Returns undefined if the definition cannot be found.\n */\nfunction getDefinition (macroName, parser, options) {\n\tvar variableContainer = parser.getVariableWidget();\n\tvar def = variableContainer.variables[macroName];\n\tif (!def) {\n\t\t// Check with the macro modules\n\t\tif ($tw.utils.hop($tw.macros, macroName)) {\n\t\t\tdef = $tw.macros[macroName];\n\t\t} else {\n\t\t\tthrow new CannotFindMacroDefError(macroName);\n\t\t}\n\t}\n\treturn def;\n};\n\nfunction parseParams(paramString, pos) {\n\tvar params = [],\n\t\treParam = /\\s*(?:([A-Za-z0-9\\-_]+)\\s*:)?(?:\\s*(?:\"\"\"([\\s\\S]*?)\"\"\"|\"([^\"]*)\"|'([^']*)'|\\[\\[([^\\]]*)\\]\\]|([^\"'\\s]+)))/mg,\n\t\tparamMatch = reParam.exec(paramString);\n\twhile(paramMatch) {\n\t\t// Process this parameter\n\t\tvar paramInfo = {\n\t\t\tvalue: paramMatch[2] || paramMatch[3] || paramMatch[4] || paramMatch[5] || paramMatch[6]\n\t\t};\n\t\tif(paramMatch[1]) {\n\t\t\tparamInfo.name = paramMatch[1];\n\t\t}\n\t\t//paramInfo.start = pos;\n\t\tparamInfo.end = reParam.lastIndex + pos;\n\t\tparams.push(paramInfo);\n\t\t// Find the next match\n\t\tparamMatch = reParam.exec(paramString);\n\t}\n\treturn params;\n};\n",
+            "module-type": "relinkwikitextrule",
+            "title": "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/macrocall.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/macrodef.js": {
+            "text": "/*\\\nmodule-type: relinkwikitextrule\n\nHandles pragma macro definitions. Except we only update placeholder macros\nthat we may have previously install.\n\n\\define relink-?() Tough title\n\n\\*/\n\nvar log = require('$:/plugins/flibbles/relink/js/language.js').logRelink;\nvar settings = require(\"$:/plugins/flibbles/relink/js/settings\");\n\nexports.name = \"macrodef\";\n\nexports.relink = function(tiddler, text, fromTitle, toTitle, options) {\n\tvar setParseTreeNode = this.parse();\n\tvar parentWidget = this.parser.getVariableWidget();\n\tvar setWidget = parentWidget.makeChildWidget(setParseTreeNode[0]);\n\tsetWidget.computeAttributes();\n\tsetWidget.execute();\n\tthis.parser.addWidget(setWidget);\n\t// Parse set the pos pointer, but we don't want to skip the macro body.\n\tthis.parser.pos = this.matchRegExp.lastIndex;\n\tvar m = this.match;\n\t// This macro is not available should we need to make one.\n\tthis.parser.reserve(m[1]);\n\t// !m[3] means it's not a multiline macrodef\n\tvar placeholder = /^relink-(?:(\\w+)-)?(\\d+)$/.exec(m[1]);\n\tif (placeholder && m[2] === '' && !m[3]) {\n\t\tthis.parser.pos = $tw.utils.skipWhiteSpace(text, this.parser.pos);\n\t\tvar valueRegExp = /([^\\n\\r]+)(\\r?\\n)/mg;\n\t\tvalueRegExp.lastIndex = this.parser.pos;\n\t\tvar match = valueRegExp.exec(text);\n\t\tif (match) {\n\t\t\tvar handler = settings.getRelinker(placeholder[1] || 'title');\n\t\t\t\t// This is a filter\n\t\t\tvar extendedOptions = $tw.utils.extend({placeholder: this.parser}, options);\n\t\t\tvar value = handler.relink(match[1], fromTitle, toTitle, extendedOptions);\n\t\t\tif (value !== undefined) {\n\t\t\t\tvar message = \"macrodef\";\n\t\t\t\tif (extendedOptions.usedPlaceholder) {\n\t\t\t\t\tmessage = \"macrodef-placeholder\";\n\t\t\t\t}\n\t\t\t\tlog(message, {\n\t\t\t\t\tfrom: fromTitle,\n\t\t\t\t\tto: toTitle,\n\t\t\t\t\ttiddler: tiddler.fields.title,\n\t\t\t\t\tmacro: m[1]\n\t\t\t\t}, options);\n\t\t\t\tthis.parser.pos += match[0].length;\n\t\t\t\treturn \"\\\\define \"+m[1]+\"() \"+value+match[2];\n\t\t\t}\n\t\t}\n\t}\n\treturn undefined;\n};\n",
+            "module-type": "relinkwikitextrule",
+            "title": "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/macrodef.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/prettylink.js": {
+            "text": "/*\\\nmodule-type: relinkwikitextrule\n\nHandles replacement in wiki text inline rules, like,\n\n[[Introduction]]\n\n[[link description|TiddlerTitle]]\n\n\\*/\n\nvar log = require('$:/plugins/flibbles/relink/js/language.js').logRelink;\nvar utils = require(\"./utils.js\");\n\nexports.name = \"prettylink\";\n\nexports.relink = function(tiddler, text, fromTitle, toTitle, options) {\n\tthis.parser.pos = this.matchRegExp.lastIndex;\n\tvar caption, quoted, m = this.match;\n\tif (m[2] === fromTitle) {\n\t\t// format is [[caption|MyTiddler]]\n\t\tcaption = m[1];\n\t} else if (m[2] !== undefined || m[1] !== fromTitle) {\n\t\t// format is [[MyTiddler]], and it doesn't match\n\t\treturn undefined;\n\t}\n\tvar logArguments = {\n\t\tfrom: fromTitle,\n\t\tto: toTitle,\n\t\ttiddler: tiddler.fields.title\n\t};\n\tif (utils.canBePretty(toTitle)) {\n\t\tlog(\"prettylink\", logArguments, options);\n\t\treturn prettyLink(toTitle, caption);\n\t} else if (caption === undefined) {\n\t\t// If we don't have a caption, we have to resort to placeholders\n\t\t// anyway to prevent link/caption desync from later relinks.\n\t\t// It doesn't matter whether the toTitle is quotable\n\t\tlog(\"prettylink-placeholder\", logArguments, options);\n\t\tvar ph = this.parser.getPlaceholderFor(toTitle);\n\t\treturn \"<$link to=<<\"+ph+\">>><$text text=<<\"+ph+\">>/></$link>\";\n\t} else if (quoted = utils.wrapAttributeValue(toTitle)) {\n\t\tlog(\"prettylink-widget\", logArguments, options);\n\t\treturn \"<$link to=\"+quoted+\">\"+caption+\"</$link>\";\n\t} else {\n\t\tlog(\"prettylink-placeholder\", logArguments, options);\n\t\tvar ph = this.parser.getPlaceholderFor(toTitle);\n\t\treturn \"<$link to=<<\"+ph+\">>>\"+caption+\"</$link>\";\n\t}\n};\n\nfunction prettyLink(title, caption) {\n\tif (caption) {\n\t\treturn \"[[\" + caption + \"|\" + title + \"]]\";\n\t} else {\n\t\treturn \"[[\" + title + \"]]\";\n\t}\n};\n\nfunction isSafe(value) {\n\treturn value.indexOf(\"]]\") < 0 && value[value.length-1] !== ']';\n};\n",
+            "module-type": "relinkwikitextrule",
+            "title": "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/prettylink.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/rules.js": {
+            "text": "/*\\\nmodule-type: relinkwikitextrule\n\nParses and acknowledges any pragma rules a tiddler has.\n\n\\rules except html wikilink\n\n\\*/\n\nexports.name = \"rules\";\n\n/**This is all we have to do. The rules rule doesn't parse. It just amends\n * the rules, which is exactly what I want it to do too.\n * It also takes care of moving the pos pointer forward.\n */\nexports.relink = function() { this.parse(); };\n",
+            "module-type": "relinkwikitextrule",
+            "title": "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/rules.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/transclude.js": {
+            "text": "/*\\\nmodule-type: relinkwikitextrule\n\nHandles replacement of transclusions in wiki text like,\n\n{{RenamedTiddler}}\n{{RenamedTiddler||TemplateTitle}}\n\nThis renames both the tiddler and the template field.\n\n\\*/\n\nvar log = require('$:/plugins/flibbles/relink/js/language.js').logRelink;\nvar refHandler = require(\"$:/plugins/flibbles/relink/js/fieldtypes/reference\");\nvar utils = require(\"./utils.js\");\n\nexports.name = ['transcludeinline', 'transcludeblock'];\n\nexports.relink = function(tiddler, text, fromTitle, toTitle, options) {\n\tvar m = this.match,\n\t\treference = m[1],\n\t\ttemplate = m[2],\n\t\tquoted,\n\t\tlogArguments = {\n\t\t\tfrom: fromTitle,\n\t\t\tto: toTitle,\n\t\t\ttiddler: tiddler.fields.title\n\t\t};\n\tthis.parser.pos = this.matchRegExp.lastIndex;\n\tvar trimmedRef = $tw.utils.trim(reference);\n\tvar ref = $tw.utils.parseTextReference(trimmedRef);\n\t// This block takes care of 99% of all cases\n\tif (canBePrettyTemplate(toTitle) &&\n\t\t// title part has one extra restriction\n\t    (ref.title !== fromTitle || refHandler.canBePretty(toTitle))) {\n\t\tvar modified = false;\n\t\tif (ref.title === fromTitle) {\n\t\t\tmodified = true;\n\t\t\tref.title = toTitle;\n\t\t\tvar refString = refHandler.toString(ref);\n\t\t\t// preserve user's whitespace\n\t\t\treference = reference.replace(trimmedRef, refString);\n\t\t}\n\t\tif ($tw.utils.trim(template) === fromTitle) {\n\t\t\tmodified = true;\n\t\t\t// preserve user's whitespace\n\t\t\ttemplate = template.replace(fromTitle, toTitle);\n\t\t}\n\t\tif (modified) {\n\t\t\tlog(\"transclude\", logArguments, options);\n\t\t\treturn prettyTransclude(reference, template);\n\t\t}\n\t\treturn undefined;\n\t}\n\t// Now for the 1%...\n\tif (ref.title === fromTitle) {\n\t\tvar resultTitle = utils.wrapAttributeValue(toTitle);\n\t\tif (resultTitle === undefined) {\n\t\t\tresultTitle = \"<<\"+this.parser.getPlaceholderFor(toTitle)+\">>\";\n\t\t\tlog(\"transclude-placeholder\", logArguments, options);\n\t\t} else {\n\t\t\tlog(\"transclude-widget\", logArguments, options);\n\t\t}\n\t\tif ($tw.utils.trim(template) === fromTitle) {\n\t\t\t// Now for this bizarre-ass use-case, where both the\n\t\t\t// title and template are being replaced.\n\t\t\tvar attrs = this.transcludeAttributes(ref.field, ref.index);\n\t\t\treturn \"<$tiddler tiddler=\"+resultTitle+\"><$transclude tiddler=\"+resultTitle+attrs+\"/></$tiddler>\";\n\t\t} else {\n\t\t\tref.title = undefined;\n\t\t\treturn \"<$tiddler tiddler=\"+resultTitle+\">\"+prettyTransclude(ref, template)+\"</$tiddler>\";\n\t\t}\n\t}\n\tif ($tw.utils.trim(template) === fromTitle) {\n\t\tvar resultTemplate = utils.wrapAttributeValue(toTitle);\n\t\tvar message = \"transclude-widget\";\n\t\tvar rtn;\n\t\tif (resultTemplate === undefined) {\n\t\t\tresultTemplate = \"<<\"+this.parser.getPlaceholderFor(toTitle)+\">>\";\n\t\t\tmessage = \"transclude-placeholder\";\n\t\t}\n\t\tif (ref.title) {\n\t\t\tvar resultTitle = utils.wrapAttributeValue(ref.title);\n\t\t\tif (resultTitle === undefined) {\n\t\t\t\t// This is one of the rare cases were we need\n\t\t\t\t// to placeholder a title OTHER than the one\n\t\t\t\t// we're changing.\n\t\t\t\tresultTitle = \"<<\"+this.parser.getPlaceholderFor(ref.title)+\">>\";\n\t\t\t\tmessage = \"transclude-placeholder\";\n\t\t\t}\n\t\t\tvar attrs = this.transcludeAttributes(ref.field, ref.index);\n\t\t\trtn = \"<$tiddler tiddler=\"+resultTitle+\"><$transclude tiddler=\"+resultTemplate+attrs+\"/></$tiddler>\";\n\t\t} else {\n\t\t\trtn = \"<$transclude tiddler=\"+resultTemplate+\"/>\";\n\t\t}\n\t\tlog(message, logArguments, options);\n\t\treturn rtn;\n\t}\n\treturn undefined;\n};\n\nfunction canBePrettyTemplate(value) {\n\treturn value.indexOf('}') < 0 && value.indexOf('{') < 0 && value.indexOf('|') < 0;\n};\n\n/**Returns attributes for a transclude widget.\n * only field or index should be used, not both, but both will return\n * the intuitive (albeit useless) result.\n */\nexports.transcludeAttributes = function(field, index) {\n\treturn rtn = [\n\t\twrapAttribute(this.parser, \"field\", field),\n\t\twrapAttribute(this.parser, \"index\", index)\n\t].join('');\n};\n\nfunction wrapAttribute(wikiRelinker, name, value) {\n\tif (value) {\n\t\tvar wrappedValue = utils.wrapAttributeValue(value);\n\t\tif (wrappedValue === undefined) {\n\t\t\twrappedValue = \"<<\"+wikiRelinker.getPlaceholderFor(value, name)+\">>\";\n\t\t}\n\t\treturn \" \"+name+\"=\"+wrappedValue;\n\t}\n\treturn '';\n};\n\nfunction prettyTransclude(textReference, template) {\n\tif (typeof textReference !== \"string\") {\n\t\ttextReference = refHandler.toString(textReference);\n\t}\n\tif (!textReference) {\n\t\ttextReference = '';\n\t}\n\tif (template !== undefined) {\n\t\treturn \"{{\"+textReference+\"||\"+template+\"}}\";\n\t} else {\n\t\treturn \"{{\"+textReference+\"}}\";\n\t}\n};\n",
+            "module-type": "relinkwikitextrule",
+            "title": "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/transclude.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/utils.js": {
+            "text": "/*\\\nmodule-type: library\n\nUtility methods for the wikitext relink rules.\n\n\\*/\n\n/**Finds an appropriate quote mark for a given value.\n *\n *Tiddlywiki doesn't have escape characters for attribute values. Instead,\n * we just have to find the type of quotes that'll work for the given title.\n * There exist titles that simply can't be quoted.\n * If it can stick with the preference, it will.\n *\n * return: Returns the wrapped value, or undefined if it's impossible to wrap\n */\nexports.wrapAttributeValue = function(value, preference, whitelist) {\n\twhitelist = whitelist || [\"\", \"'\", '\"', '\"\"\"'];\n\tvar choices = {\n\t\t\"\": function(v) {return !/([\\/\\s<>\"'=])/.test(v); },\n\t\t\"'\": function(v) {return v.indexOf(\"'\") < 0; },\n\t\t'\"': function(v) {return v.indexOf('\"') < 0; },\n\t\t'\"\"\"': function(v) {return v.indexOf('\"\"\"') < 0 && v[v.length-1] != '\"';},\n\t\t\"[[\": exports.canBePrettyOperand\n\t};\n\tvar wrappers = {\n\t\t\"\": function(v) {return v; },\n\t\t\"'\": function(v) {return \"'\"+v+\"'\"; },\n\t\t'\"': function(v) {return '\"'+v+'\"'; },\n\t\t'\"\"\"': function(v) {return '\"\"\"'+v+'\"\"\"'; },\n\t\t\"[[\": function(v) {return \"[[\"+v+\"]]\"; }\n\t};\n\tif (choices[preference]) {\n\t\tif (choices[preference](value)) {\n\t\t\treturn wrappers[preference](value);\n\t\t}\n\t}\n\tfor (var i = 0; i < whitelist.length; i++) {\n\t\tvar quote = whitelist[i];\n\t\tif (choices[quote](value)) {\n\t\t\treturn wrappers[quote](value);\n\t\t}\n\t}\n\t// No quotes will work on this\n\treturn undefined;\n};\n\n/**Return true if value can be used inside a prettylink.\n */\nexports.canBePretty = function(value) {\n\treturn value.indexOf(\"]]\") < 0 && value[value.length-1] !== ']';\n};\n\nexports.canBePrettyOperand = function(value) {\n\treturn value.indexOf(']') < 0;\n};\n\n/**Given some text, and a param or  attribute within that text, this returns\n * what type of quotation that attribute is using.\n *\n * param: An object in the form {end:, ...}\n */\nexports.determineQuote = function(text, param) {\n\tvar pos = param.end-1;\n\tif (text[pos] === \"'\") {\n\t\treturn \"'\";\n\t}\n\tif (text[pos] === '\"') {\n\t\tif (text.substr(pos-2, 3) === '\"\"\"') {\n\t\t\treturn '\"\"\"';\n\t\t} else {\n\t\t\treturn '\"';\n\t\t}\n\t}\n\tif (text.substr(pos-1,2) === ']]' && text.substr((pos-param.value.length)-3, 2) === '[[') {\n\t\treturn \"[[\";\n\t}\n\treturn '';\n};\n",
+            "module-type": "library",
+            "title": "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/utils.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/wikilink.js": {
+            "text": "/*\\\nmodule-type: relinkwikitextrule\n\nHandles CamelCase links\n\nWikiLink\n\nbut not:\n\n~WikiLink\n\n\\*/\n\nvar log = require('$:/plugins/flibbles/relink/js/language.js').logRelink;\nvar utils = require(\"./utils.js\");\n\nexports.name = \"wikilink\";\n\nexports.relink = function(tiddler, text, fromTitle, toTitle, options) {\n\tthis.parser.pos = this.matchRegExp.lastIndex;\n\tif (this.match[0] === fromTitle && this.match[0][0] !== '~') {\n\t\tvar logArguments = {\n\t\t\tfrom: fromTitle,\n\t\t\tto: toTitle,\n\t\t\ttiddler: tiddler.fields.title\n\t\t};\n\t\tif (toTitle.match(this.matchRegExp) && toTitle[0] !== '~') {\n\t\t\tlog(\"wikilink\", logArguments, options);\n\t\t\treturn toTitle;\n\t\t} else if (utils.canBePretty(toTitle)) {\n\t\t\tlog(\"wikilink-pretty\", logArguments, options);\n\t\t\treturn \"[[\" + toTitle + \"]]\";\n\t\t} else {\n\t\t\tvar ph = this.parser.getPlaceholderFor(toTitle);\n\t\t\tlog(\"wikilink-placeholder\", logArguments, options);\n\t\t\treturn \"<$link to=<<\"+ph+\">>><$text text=<<\"+ph+\">>/></$link>\";\n\t\t}\n\t}\n\treturn undefined;\n};\n",
+            "module-type": "relinkwikitextrule",
+            "title": "$:/plugins/flibbles/relink/js/relinkoperations/text/wikitext/wikilink.js",
+            "type": "application/javascript"
+        },
+        "$:/plugins/flibbles/relink/js/utils/rebuilder.js": {
+            "text": "/*\\\n\nThis helper class aids in reconstructing an existing string with new parts.\n\n\\*/\n\nfunction Rebuilder(text, start) {\n\tthis.text = text;\n\tthis.index = start || 0;\n\tthis.pieces = [];\n};\n\nmodule.exports = Rebuilder;\n\n/**Pieces must be added consecutively.\n * Start and end are the indices in the old string specifying where to graft\n * in the new piece.\n */\nRebuilder.prototype.add = function(value, start, end) {\n\tthis.pieces.push(this.text.substring(this.index, start), value);\n\tthis.index = end;\n};\n\nRebuilder.prototype.changed = function() {\n\treturn this.pieces.length > 0;\n};\n\n/** This sticks something on the beginning of the resulting content.\n */\nRebuilder.prototype.prepend = function(content) {\n\tif (content) {\n\t\tthis.pieces.unshift(content);\n\t}\n};\n\nRebuilder.prototype.results = function(end) {\n\tif (this.changed()) {\n\t\tthis.pieces.push(this.text.substring(this.index, end));\n\t\treturn this.pieces.join('');\n\t}\n\treturn undefined;\n};\n",
+            "module-type": "library",
+            "title": "$:/plugins/flibbles/relink/js/utils/rebuilder.js",
+            "type": "application/javascript"
+        },
+        "$:/config/flibbles/relink/attributes/$button/to": {
+            "title": "$:/config/flibbles/relink/attributes/$button/to",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$checkbox/tiddler": {
+            "title": "$:/config/flibbles/relink/attributes/$checkbox/tiddler",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$checkbox/tag": {
+            "title": "$:/config/flibbles/relink/attributes/$checkbox/tag",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$count/filter": {
+            "title": "$:/config/flibbles/relink/attributes/$count/filter",
+            "text": "filter"
+        },
+        "$:/config/flibbles/relink/attributes/$draggable/tiddler": {
+            "title": "$:/config/flibbles/relink/attributes/$draggable/tiddler",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$draggable/filter": {
+            "title": "$:/config/flibbles/relink/attributes/$draggable/filter",
+            "text": "filter"
+        },
+        "$:/config/flibbles/relink/attributes/$edit-bitmap/tiddler": {
+            "title": "$:/config/flibbles/relink/attributes/$edit-bitmap/tiddler",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$edit-text/tiddler": {
+            "title": "$:/config/flibbles/relink/attributes/$edit-text/tiddler",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$edit/tiddler": {
+            "title": "$:/config/flibbles/relink/attributes/$edit/tiddler",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$encrypt/filter": {
+            "title": "$:/config/flibbles/relink/attributes/$encrypt/filter",
+            "text": "filter"
+        },
+        "$:/config/flibbles/relink/attributes/$fieldmangler/tiddler": {
+            "title": "$:/config/flibbles/relink/attributes/$fieldmangler/tiddler",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$fields/tiddler": {
+            "title": "$:/config/flibbles/relink/attributes/$fields/tiddler",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$image/source": {
+            "title": "$:/config/flibbles/relink/attributes/$image/source",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$importvariables/filter": {
+            "title": "$:/config/flibbles/relink/attributes/$importvariables/filter",
+            "text": "filter"
+        },
+        "$:/config/flibbles/relink/attributes/$linkcatcher/to": {
+            "title": "$:/config/flibbles/relink/attributes/$linkcatcher/to",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$linkcatcher/set": {
+            "title": "$:/config/flibbles/relink/attributes/$linkcatcher/set",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$link/to": {
+            "title": "$:/config/flibbles/relink/attributes/$link/to",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$list/filter": {
+            "title": "$:/config/flibbles/relink/attributes/$list/filter",
+            "text": "filter"
+        },
+        "$:/config/flibbles/relink/attributes/$list/template": {
+            "title": "$:/config/flibbles/relink/attributes/$list/template",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$list/editTemplate": {
+            "title": "$:/config/flibbles/relink/attributes/$list/editTemplate",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$list/history": {
+            "title": "$:/config/flibbles/relink/attributes/$list/history",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$navigator/story": {
+            "title": "$:/config/flibbles/relink/attributes/$navigator/story",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$navigator/history": {
+            "title": "$:/config/flibbles/relink/attributes/$navigator/history",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$radio/tiddler": {
+            "title": "$:/config/flibbles/relink/attributes/$radio/tiddler",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$range/tiddler": {
+            "title": "$:/config/flibbles/relink/attributes/$range/tiddler",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$reveal/stateTitle": {
+            "title": "$:/config/flibbles/relink/attributes/$reveal/stateTitle",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$select/tiddler": {
+            "title": "$:/config/flibbles/relink/attributes/$select/tiddler",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$setvariable/tiddler": {
+            "title": "$:/config/flibbles/relink/attributes/$setvariable/tiddler",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$setvariable/subtiddler": {
+            "title": "$:/config/flibbles/relink/attributes/$setvariable/subtiddler",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$setvariable/filter": {
+            "title": "$:/config/flibbles/relink/attributes/$setvariable/filter",
+            "text": "filter"
+        },
+        "$:/config/flibbles/relink/attributes/$set/tiddler": {
+            "title": "$:/config/flibbles/relink/attributes/$set/tiddler",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$set/subtiddler": {
+            "title": "$:/config/flibbles/relink/attributes/$set/subtiddler",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$set/filter": {
+            "title": "$:/config/flibbles/relink/attributes/$set/filter",
+            "text": "filter"
+        },
+        "$:/config/flibbles/relink/attributes/$tiddler/tiddler": {
+            "title": "$:/config/flibbles/relink/attributes/$tiddler/tiddler",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$transclude/tiddler": {
+            "title": "$:/config/flibbles/relink/attributes/$transclude/tiddler",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$transclude/subtiddler": {
+            "title": "$:/config/flibbles/relink/attributes/$transclude/subtiddler",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$view/tiddler": {
+            "title": "$:/config/flibbles/relink/attributes/$view/tiddler",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/attributes/$view/subtiddler": {
+            "title": "$:/config/flibbles/relink/attributes/$view/subtiddler",
+            "text": "title"
+        },
+        "$:/plugins/flibbles/relink/configuration": {
+            "title": "$:/plugins/flibbles/relink/configuration",
+            "text": "<div class=\"tc-control-panel\">\n<<tabs \"[all[shadows+tiddlers]tag[$:/tags/flibbles/relink/Configuration]!has[draft.of]]\" \"$:/plugins/flibbles/relink/ui/configuration/Fields\">>\n</div>\n"
+        },
+        "$:/config/flibbles/relink/fields/list": {
+            "title": "$:/config/flibbles/relink/fields/list",
+            "text": "list"
+        },
+        "$:/config/flibbles/relink/fields/list-after": {
+            "title": "$:/config/flibbles/relink/fields/list-after",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/fields/list-before": {
+            "title": "$:/config/flibbles/relink/fields/list-before",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/fields/tags": {
+            "title": "$:/config/flibbles/relink/fields/tags",
+            "text": "list"
+        },
+        "$:/plugins/flibbles/relink/language/Buttons/Delete/Caption": {
+            "title": "$:/plugins/flibbles/relink/language/Buttons/Delete/Caption",
+            "text": "delete"
+        },
+        "$:/plugins/flibbles/relink/language/Buttons/NewAttribute/Hint": {
+            "title": "$:/plugins/flibbles/relink/language/Buttons/NewAttribute/Hint",
+            "text": "Specify a new widget/element attribute to be updated whenever a tiddler is renamed"
+        },
+        "$:/plugins/flibbles/relink/language/Buttons/NewAttribute/Caption": {
+            "title": "$:/plugins/flibbles/relink/language/Buttons/NewAttribute/Caption",
+            "text": "add"
+        },
+        "$:/plugins/flibbles/relink/language/Buttons/NewField/Hint": {
+            "title": "$:/plugins/flibbles/relink/language/Buttons/NewField/Hint",
+            "text": "Specify a new field to be updated whenever a tiddler is renamed"
+        },
+        "$:/plugins/flibbles/relink/language/Buttons/NewField/Caption": {
+            "title": "$:/plugins/flibbles/relink/language/Buttons/NewField/Caption",
+            "text": "add"
+        },
+        "$:/plugins/flibbles/relink/language/Buttons/NewOperator/Hint": {
+            "title": "$:/plugins/flibbles/relink/language/Buttons/NewOperator/Hint",
+            "text": "Specify a new filter operator to be considered whenever a tiddler is renamed"
+        },
+        "$:/plugins/flibbles/relink/language/Buttons/NewOperator/Caption": {
+            "title": "$:/plugins/flibbles/relink/language/Buttons/NewOperator/Caption",
+            "text": "add"
+        },
+        "$:/plugins/flibbles/relink/language/Buttons/NewParameter/Hint": {
+            "title": "$:/plugins/flibbles/relink/language/Buttons/NewParameter/Hint",
+            "text": "Specify a new macro parameter to be updated whenever a tiddler is renamed"
+        },
+        "$:/plugins/flibbles/relink/language/Buttons/NewParameter/Caption": {
+            "title": "$:/plugins/flibbles/relink/language/Buttons/NewParameter/Caption",
+            "text": "add"
+        },
+        "$:/plugins/flibbles/relink/language/Error/RelinkFilterOperator": {
+            "title": "$:/plugins/flibbles/relink/language/Error/RelinkFilterOperator",
+            "text": "Filter Error: Unknown suffix for the 'relink' filter operator"
+        },
+        "$:/plugins/flibbles/relink/language/Help/Attributes": {
+            "title": "$:/plugins/flibbles/relink/language/Help/Attributes",
+            "text": "See the [[Attributes documentation page|https://flibbles.github.io/tw5-relink/#Attributes]] for details."
+        },
+        "$:/plugins/flibbles/relink/language/Help/Fields": {
+            "title": "$:/plugins/flibbles/relink/language/Help/Fields",
+            "text": "See the [[Fields documentation page|https://flibbles.github.io/tw5-relink/#Fields]] for details."
+        },
+        "$:/plugins/flibbles/relink/language/Help/Macros": {
+            "title": "$:/plugins/flibbles/relink/language/Help/Macros",
+            "text": "See the [[Macros documentation page|https://flibbles.github.io/tw5-relink/#Macros]] for details."
+        },
+        "$:/plugins/flibbles/relink/language/Help/Operators": {
+            "title": "$:/plugins/flibbles/relink/language/Help/Operators",
+            "text": "See the [[Operators documentation page|https://flibbles.github.io/tw5-relink/#Operators]] for details."
+        },
+        "$:/plugins/flibbles/relink/language/TiddlerInfo/References/Empty": {
+            "title": "$:/plugins/flibbles/relink/language/TiddlerInfo/References/Empty",
+            "text": "No tiddlers contain any fields, links, macros, transclusions, or widgets referencing this one"
+        },
+        "$:/plugins/flibbles/relink/language/TiddlerInfo/References/Description": {
+            "title": "$:/plugins/flibbles/relink/language/TiddlerInfo/References/Description",
+            "text": "The following tiddlers contain fields, links, macros, transclusions, or widgets referencing this one:"
+        },
+        "$:/plugins/flibbles/relink/language/TiddlerInfo/References/Caption": {
+            "title": "$:/plugins/flibbles/relink/language/TiddlerInfo/References/Caption",
+            "text": "//Relink// References"
+        },
+        "$:/plugins/flibbles/relink/language/ui/Attributes/Caption": {
+            "title": "$:/plugins/flibbles/relink/language/ui/Attributes/Caption",
+            "text": "Attributes"
+        },
+        "$:/plugins/flibbles/relink/language/ui/Fields/Caption": {
+            "title": "$:/plugins/flibbles/relink/language/ui/Fields/Caption",
+            "text": "Fields"
+        },
+        "$:/plugins/flibbles/relink/language/ui/Macros/Caption": {
+            "title": "$:/plugins/flibbles/relink/language/ui/Macros/Caption",
+            "text": "Macros"
+        },
+        "$:/plugins/flibbles/relink/language/ui/Operators/Caption": {
+            "title": "$:/plugins/flibbles/relink/language/ui/Operators/Caption",
+            "text": "Operators"
+        },
+        "$:/config/flibbles/relink/macros/csvtiddlers/filter": {
+            "title": "$:/config/flibbles/relink/macros/csvtiddlers/filter",
+            "text": "filter"
+        },
+        "$:/config/flibbles/relink/macros/datauri/title": {
+            "title": "$:/config/flibbles/relink/macros/datauri/title",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/macros/jsontiddler/title": {
+            "title": "$:/config/flibbles/relink/macros/jsontiddler/title",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/macros/jsontiddlers/filter": {
+            "title": "$:/config/flibbles/relink/macros/jsontiddlers/filter",
+            "text": "filter"
+        },
+        "$:/config/flibbles/relink/macros/list-links/filter": {
+            "title": "$:/config/flibbles/relink/macros/list-links/filter",
+            "text": "filter"
+        },
+        "$:/config/flibbles/relink/macros/list-links-draggable/tiddler": {
+            "title": "$:/config/flibbles/relink/macros/list-links-draggable/tiddler",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/macros/list-links-draggable/itemTemplate": {
+            "title": "$:/config/flibbles/relink/macros/list-links-draggable/itemTemplate",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/macros/list-tagged-draggable/tag": {
+            "title": "$:/config/flibbles/relink/macros/list-tagged-draggable/tag",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/macros/list-tagged-draggable/itemTemplate": {
+            "title": "$:/config/flibbles/relink/macros/list-tagged-draggable/itemTemplate",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/macros/toc/tag": {
+            "title": "$:/config/flibbles/relink/macros/toc/tag",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/macros/toc/selectedTiddler": {
+            "title": "$:/config/flibbles/relink/macros/toc/selectedTiddler",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/macros/toc/template": {
+            "title": "$:/config/flibbles/relink/macros/toc/template",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/macros/tabs/buttonTemplate": {
+            "title": "$:/config/flibbles/relink/macros/tabs/buttonTemplate",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/macros/tabs/default": {
+            "title": "$:/config/flibbles/relink/macros/tabs/default",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/macros/tabs/tabsList": {
+            "title": "$:/config/flibbles/relink/macros/tabs/tabsList",
+            "text": "filter"
+        },
+        "$:/config/flibbles/relink/macros/tabs/template": {
+            "title": "$:/config/flibbles/relink/macros/tabs/template",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/macros/tag/tag": {
+            "title": "$:/config/flibbles/relink/macros/tag/tag",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/macros/tag-pill/tag": {
+            "title": "$:/config/flibbles/relink/macros/tag-pill/tag",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/macros/timeline/subfilter": {
+            "title": "$:/config/flibbles/relink/macros/timeline/subfilter",
+            "text": "filter"
+        },
+        "$:/config/flibbles/relink/operators/list": {
+            "title": "$:/config/flibbles/relink/operators/list",
+            "text": "reference"
+        },
+        "$:/config/flibbles/relink/operators/tag": {
+            "title": "$:/config/flibbles/relink/operators/tag",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/operators/title": {
+            "title": "$:/config/flibbles/relink/operators/title",
+            "text": "title"
+        },
+        "$:/config/flibbles/relink/operators/field:title": {
+            "title": "$:/config/flibbles/relink/operators/field:title",
+            "text": "title"
+        },
+        "$:/language/EditTemplate/Title/Impossibles/Prompt": {
+            "title": "$:/language/EditTemplate/Title/Impossibles/Prompt",
+            "text": "The following references to this tiddler can ''not'' be updated by //Relink// due to the complexity of the new title:"
+        },
+        "$:/language/EditTemplate/Title/References/Prompt": {
+            "title": "$:/language/EditTemplate/Title/References/Prompt",
+            "text": "The following tiddlers will be updated if relinking:"
+        },
+        "$:/language/EditTemplate/Title/Relink/Prompt": {
+            "title": "$:/language/EditTemplate/Title/Relink/Prompt",
+            "text": "Use //Relink// to update ''<$text text=<<fromTitle>>/>'' to ''<$text text=<<toTitle>>/>'' across all other tiddlers"
+        },
+        "$:/core/ui/EditTemplate/title": {
+            "title": "$:/core/ui/EditTemplate/title",
+            "tags": "$:/tags/EditTemplate",
+            "text": "\\define conditional-list(state, prompt, filter)\n<$list filter=\"[subfilter<__filter__>limit[1]]\" variable=\"listItem\">\n\n<$vars stateTiddler=<<qualify \"$:/state/edit/$state$\">> >\n\n<$reveal type=\"nomatch\" state=<<stateTiddler>> text=\"show\">\n<$button set=<<stateTiddler>> setTo=\"show\" class=\"tc-btn-invisible\">{{$:/core/images/right-arrow}}\n<<lingo [[$prompt$]]>></$button>\n</$reveal>\n<$reveal type=\"match\" state=<<stateTiddler>> text=\"show\">\n<$button set=<<stateTiddler>> setTo=\"hide\" class=\"tc-btn-invisible\">{{$:/core/images/down-arrow}}\n<<lingo [[$prompt$]]>></$button>\n</$reveal>\n\n<$reveal type=\"match\" state=<<stateTiddler>> text=\"show\">\n<$list filter=<<__filter__>> template=\"$:/core/ui/ListItemTemplate\">\n</$list>\n</$reveal>\n\n</$vars>\n\\end\n\n<$edit-text field=\"draft.title\" class=\"tc-titlebar tc-edit-texteditor\" focus=\"true\" tabindex={{$:/config/EditTabIndex}}/>\n\n<$reveal state=\"!!draft.title\" type=\"nomatch\" text={{!!draft.of}} tag=\"div\">\n\n<$list filter=\"[{!!draft.title}!is[missing]]\" variable=\"listItem\">\n\n<div class=\"tc-message-box\">\n\n{{$:/core/images/warning}} {{$:/language/EditTemplate/Title/Exists/Prompt}}\n\n</div>\n\n</$list>\n\n<$list filter=\"[{!!draft.of}!is[missing]]\" variable=\"listItem\">\n\n<$vars fromTitle={{!!draft.of}} toTitle={{!!draft.title}}>\n\n<$checkbox tiddler=\"$:/config/RelinkOnRename\" field=\"text\" checked=\"yes\" unchecked=\"no\" default=\"no\"> {{$:/language/EditTemplate/Title/Relink/Prompt}}</$checkbox>\n\n<<conditional-list impossibles EditTemplate/Title/Impossibles/Prompt \"[{!!draft.title}relink:impossible<fromTitle>]\">>\n\n<<conditional-list references EditTemplate/Title/References/Prompt \"[relink:references<fromTitle>!title[$:/StoryList]sort[title]]\">>\n\n</$vars>\n\n</$list>\n\n</$reveal>\n"
+        },
+        "$:/plugins/flibbles/relink/readme": {
+            "title": "$:/plugins/flibbles/relink/readme",
+            "type": "text/vnd.tiddlywiki",
+            "text": "When renaming a tiddler, Relink can update the fields, filters, and widgets\nof all other tiddlers. However, it works through whitelisting.\n\nIt's already configured to update tiddler titles for all core widgets, filters,\nand fields, but the whitelists can be customized for each of this in the\nconfiguration panel.\n\nSee [[the tw5-relink website|https://github.com/flibbles/tw5-relink]] for\nmore details and examples.\n"
+        },
+        "$:/config/flibbles/relink/settings/default-type": {
+            "title": "$:/config/flibbles/relink/settings/default-type",
+            "text": "title"
+        },
+        "$:/plugins/flibbles/relink/ui/TiddlerInfo/References": {
+            "title": "$:/plugins/flibbles/relink/ui/TiddlerInfo/References",
+            "caption": "{{$:/plugins/flibbles/relink/language/TiddlerInfo/References/Caption}}",
+            "tags": "$:/tags/TiddlerInfo",
+            "text": "\\define lingo-base() $:/plugins/flibbles/relink/language/TiddlerInfo/\n\\define filter() [relink:references<currentTiddler>!title[$:/StoryList]sort[title]]\n<$list filter=\"[subfilter<filter>first[]]\">\n\n<<lingo References/Description>>\n</$list>\n\n<$list filter=<<filter>> emptyMessage=<<lingo References/Empty>> template=\"$:/core/ui/ListItemTemplate\">\n"
+        },
+        "$:/plugins/flibbles/relink/ui/components/button-delete": {
+            "title": "$:/plugins/flibbles/relink/ui/components/button-delete",
+            "text": "\\define lingo-base() $:/plugins/flibbles/relink/language/Buttons/\n\n<$button class=\"tc-btn-invisible\"><$list filter=\"[all[current]is[tiddler]]\">\n<$action-deletetiddler $tiddler=<<currentTiddler>> />\n</$list><$list filter=\"[all[current]is[shadow]]\">\n<$action-setfield $tiddler=<<tiddlerName>> text=\"\" />\n</$list>\n<$list filter=\"[<tv-config-toolbar-icons>prefix[yes]]\">{{$:/core/images/delete-button}}</$list>\n<$list filter=\"[<tv-config-toolbar-text>prefix[yes]]\">\n<span class=\"tc-btn-text\"><$text text={{$(lingo-base)$Delete/Caption}}/></span>\n</$list></$button>\n"
+        },
+        "$:/plugins/flibbles/relink/ui/components/select-fieldtype": {
+            "title": "$:/plugins/flibbles/relink/ui/components/select-fieldtype",
+            "text": "<$select tiddler=<<currentTiddler>> default={{$:/config/flibbles/relinke/settings/default-type}} >\n<$list variable=\"option\"\n       filter=\"[[relinkfieldtype]modules[]removeprefix[$:/plugins/flibbles/relink/js/fieldtypes/]removesuffix[.js]move:-100{$:/config/flibbles/relink/settings/default-type}]\">\n<option><$text text=<<option>> /></option>\n</$list>\n</$select>\n"
+        },
+        "$:/plugins/flibbles/relink/ui/configuration/Attributes": {
+            "title": "$:/plugins/flibbles/relink/ui/configuration/Attributes",
+            "caption": "{{$:/plugins/flibbles/relink/language/ui/Attributes/Caption}}",
+            "tags": "$:/tags/flibbles/relink/Configuration",
+            "text": "\\define prefix-attr() $:/config/flibbles/relink/attributes/\n\\define lingo-base() $:/plugins/flibbles/relink/language/Buttons/\n\\define state-base() $:/state/flibbles/relink/\n\n\\define body()\n\n{{$:/plugins/flibbles/relink/language/Help/Attributes}}\n\n<table><tbody>\n<tr><th>Widget/HTML Element</th><th>Attribute</th><th>Type</th><th>Delete</th></tr>\n<$list filter=\"[all[shadows+tiddlers]prefix<prefix-attr>!has[draft.of]has[text]]\">\n<$set name=\"element\"\n      filter=\"[all[current]removeprefix<prefix-attr>splitbefore[/]removesuffix[/]]\">\n<$set name=\"attribute\"\n      filter=\"[all[current]removeprefix<prefix-attr>removeprefix<element>removeprefix[/]]\">\n<tr>\n<td><$text text=<<element>> /></td>\n<td><$text text=<<attribute>> /></td>\n<td>{{||$:/plugins/flibbles/relink/ui/components/select-fieldtype}}</td>\n<td>{{||$:/plugins/flibbles/relink/ui/components/button-delete}}</td>\n</tr>\n</$set></$set></$list>\n</tbody></table>\n\n<em class=\"tc-edit\">Add a new attribute:</em>\n<$edit-text tiddler=\"$(state-base)$element-name\"\n            tag=\"input\" default=\"\" placeholder=\"widget/element\" />\n<$edit-text tiddler=\"$(state-base)$attribute-name\"\n            tag=\"input\" default=\"\" placeholder=\"attribute\" />\n<$button tooltip={{$(lingo-base)$NewAttribute/Hint}}\n         aria-label={{$(lingo-base)$NewAttribute/Caption}}>\n<$set name=\"tiddlerName\"\n      filter=\"[<prefix-attr>addsuffix{$(state-base)$element-name}addsuffix[/]addsuffix{$(state-base)$attribute-name}]\">\n<$action-setfield $tiddler=<<tiddlerName>>\n                  text={{$:/config/flibbles/relink/settings/default-type}} />\n</$set>\n<$action-deletetiddler $tiddler=\"$(state-base)$attribute-name\" />\n<$action-deletetiddler $tiddler=\"$(state-base)$element-name\" />\n<$text text={{$(lingo-base)$NewAttribute/Caption}}/>\n</$button>\n\\end\n\n<<body>>\n"
+        },
+        "$:/plugins/flibbles/relink/ui/configuration/Fields": {
+            "title": "$:/plugins/flibbles/relink/ui/configuration/Fields",
+            "caption": "{{$:/plugins/flibbles/relink/language/ui/Fields/Caption}}",
+            "tags": "$:/tags/flibbles/relink/Configuration",
+            "text": "\\define prefix-fields() $:/config/flibbles/relink/fields/\n\\define lingo-base() $:/plugins/flibbles/relink/language/Buttons/\n\\define state-base() $:/state/flibbles/relink/\n\n\\define body()\n\n{{$:/plugins/flibbles/relink/language/Help/Fields}}\n\n<table><tbody>\n<tr><th>Field Name</th><th>Field Type</th><th>Delete</th></tr>\n<$list filter=\"[all[shadows+tiddlers]prefix<prefix-fields>!has[draft.of]has[text]]\">\n<tr>\n<td><$list filter=\"[all[current]removeprefix<prefix-fields>]\"><<currentTiddler>></$list></td>\n<td>{{||$:/plugins/flibbles/relink/ui/components/select-fieldtype}}</td>\n<td>{{||$:/plugins/flibbles/relink/ui/components/button-delete}}</td>\n</tr>\n</$list>\n</tbody></table>\n\n<em class=\"tc-edit\">Add a new field:</em>\n<$edit-text tiddler=\"$(state-base)$field-name\"\n            tag=\"input\" default=\"\" placeholder=\"field name\" />\n<$button tooltip={{$(lingo-base)$NewField/Hint}}\n         aria-label={{$(lingo-base)$NewField/Caption}}>\n<$set name=\"tiddlerName\"\n      filter=\"[<prefix-fields>addsuffix{$(state-base)$field-name}]\">\n<$action-setfield $tiddler=<<tiddlerName>>\n                  text={{$:/config/flibbles/relink/settings/default-type}} />\n</$set>\n<$action-deletetiddler $tiddler=\"$(state-base)$field-name\" />\n<$text text={{$(lingo-base)$NewField/Caption}}/>\n</$button>\n\\end\n\n<<body>>\n"
+        },
+        "$:/plugins/flibbles/relink/ui/configuration/Macros": {
+            "title": "$:/plugins/flibbles/relink/ui/configuration/Macros",
+            "caption": "{{$:/plugins/flibbles/relink/language/ui/Macros/Caption}}",
+            "tags": "$:/tags/flibbles/relink/Configuration",
+            "text": "\\define prefix-macro() $:/config/flibbles/relink/macros/\n\\define lingo-base() $:/plugins/flibbles/relink/language/Buttons/\n\\define state-base() $:/state/flibbles/relink/\n\n\\define body()\n\n{{$:/plugins/flibbles/relink/language/Help/Macros}}\n\n<table><tbody>\n<tr><th>Macro</th><th>Parameter</th><th>Type</th><th>Delete</th></tr>\n<$list filter=\"[all[shadows+tiddlers]prefix<prefix-macro>!has[draft.of]has[text]]\">\n<$set name=\"parameter\"\n      filter=\"[all[current]removeprefix<prefix-macro>relink:splitafter[/]]\">\n<$set name=\"macro\"\n      filter=\"[all[current]removeprefix<prefix-macro>removesuffix<parameter>removesuffix[/]]\">\n<tr>\n<td><$text text=<<macro>> /></td>\n<td><$text text=<<parameter>> /></td>\n<td>{{||$:/plugins/flibbles/relink/ui/components/select-fieldtype}}</td>\n<td>{{||$:/plugins/flibbles/relink/ui/components/button-delete}}</td>\n</tr>\n</$set></$set></$list>\n</tbody></table>\n\n<em class=\"tc-edit\">Add a new macro parameter:</em>\n<$edit-text tiddler=\"$(state-base)$macro-name\"\n            tag=\"input\" default=\"\" placeholder=\"macro\" />\n<$edit-text tiddler=\"$(state-base)$parameter-name\"\n            tag=\"input\" default=\"\" placeholder=\"parameter\" />\n<$button tooltip={{$(lingo-base)$NewParameter/Hint}}\n         aria-label={{$(lingo-base)$NewParameter/Caption}}>\n<$set name=\"tiddlerName\"\n      filter=\"[<prefix-macro>addsuffix{$(state-base)$macro-name}addsuffix[/]addsuffix{$(state-base)$parameter-name}]\">\n<$action-setfield $tiddler=<<tiddlerName>>\n                  text={{$:/config/flibbles/relink/settings/default-type}} />\n</$set>\n<$action-deletetiddler $tiddler=\"$(state-base)$parameter-name\" />\n<$action-deletetiddler $tiddler=\"$(state-base)$macro-name\" />\n<$text text={{$(lingo-base)$NewParameter/Caption}}/>\n</$button>\n\\end\n\n<<body>>\n"
+        },
+        "$:/plugins/flibbles/relink/ui/configuration/Operators": {
+            "title": "$:/plugins/flibbles/relink/ui/configuration/Operators",
+            "caption": "{{$:/plugins/flibbles/relink/language/ui/Operators/Caption}}",
+            "tags": "$:/tags/flibbles/relink/Configuration",
+            "text": "\\define prefix-ops() $:/config/flibbles/relink/operators/\n\\define lingo-base() $:/plugins/flibbles/relink/language/Buttons/\n\\define state-base() $:/state/flibbles/relink/\n\n\\define body()\n\n{{$:/plugins/flibbles/relink/language/Help/Operators}}\n\n<table><tbody>\n<tr><th>Filter Operator</th><th>Operand Type</th><th>Delete</th></tr>\n<$list filter=\"[all[shadows+tiddlers]prefix<prefix-ops>!has[draft.of]has[text]]\">\n<tr>\n<td><$list variable=\"listItem\" filter=\"[<currentTiddler>removeprefix<prefix-ops>]\"><<listItem>></$list></td>\n<td>{{||$:/plugins/flibbles/relink/ui/components/select-fieldtype}}</td>\n<td>{{||$:/plugins/flibbles/relink/ui/components/button-delete}}</td>\n</tr>\n</$list>\n</tbody></table>\n\n<em class=\"tc-edit\">Add a new filter operator:</em>\n<$edit-text tiddler=\"$(state-base)$operator-name\"\n            tag=\"input\" default=\"\" placeholder=\"operator name\" />\n<$button tooltip={{$(lingo-base)$NewOperator/Hint}}\n         aria-label={{$(lingo-base)$NewOperator/Caption}}>\n<$set name=\"tiddlerName\"\n      filter=\"[<prefix-ops>addsuffix{$(state-base)$operator-name}]\">\n<$action-setfield $tiddler=<<tiddlerName>> text={{$:/config/flibbles/relink/settings/default-type}} />\n</$set>\n<$action-deletetiddler $tiddler=\"$(state-base)$operator-name\" />\n<$text text={{$(lingo-base)$NewOperator/Caption}}/>\n</$button>\n\\end\n\n<<body>>\n"
+        }
+    }
+}
