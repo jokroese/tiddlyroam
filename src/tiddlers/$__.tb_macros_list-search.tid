@@ -1,0 +1,35 @@
+created: 20141202200448128
+creator: Tobias Beer
+modified: 20200304195527527
+modifier: Tobias Beer
+revision: 0
+summary: the [[list-search]] macro allows to filter list outputs
+tags: tb $:/tags/Macro
+title: $:/.tb/macros/list-search
+type: text/vnd.tiddlywiki
+
+\define list-search(
+filter:"[tags[]]",
+search:"search:title",
+state:"$:/temp/list-search",
+template:"$:/core/ui/ListItemTemplate",
+placeholder:"Filter",
+limit:100000
+)
+<div>
+<$edit-text
+tiddler="$state$"
+type="search"
+tag="input"
+default=""
+placeholder="$placeholder$"/>
+</div>
+
+<$reveal state="$state$" type="match" text="">
+<$list filter="$filter$+[limit[$limit$]]" template="$template$"/>
+</$reveal>
+
+<$reveal state="$state$" type="nomatch" text="">
+<$list filter="$filter$+[$search${$state$}]+[limit[$limit$]]" template="$template$"/>
+</$reveal>
+\end

@@ -1,0 +1,26 @@
+{
+    "tiddlers": {
+        "$:/sk/WhiteList": {
+            "text": "LeDoux,McCloud,McDonald,TiddlyWiki,TiddlyWiki5,CamelCase,DuBay,McGraw,McCullough,LeGrange,NaCl,MeOH,EtOH,PiB,TiddlyTools,ResetFind,WikiText,WinBuilder,WinPE,ProgramData,TiddlyFox,GuillermoMartin,AndrewFraser,RochesterMNwalkers,DEdwardsCalgary,WalkaboutMM,HarveyG,McCoy,GeForce,SideBar,AirBnB,PayPal,LeBron,JavaScript,ExpressJet,CutePDF,McClouds,McElroy,McGovern,TableHelper,ShadowTiddler",
+            "caption": "Words to never consider as CamelCase links",
+            "created": "20150210172146298",
+            "creator": "Stephen",
+            "description": "Words that should never be considered as CamelCase wikiwords. Separate the individual words with commas (,).",
+            "modified": "20160427151253707",
+            "modifier": "Stephen",
+            "tags": "ske",
+            "title": "$:/sk/WhiteList"
+        },
+        "$:/core/modules/parsers/wikiparser/rules/wikilink.js": {
+            "text": "/*\\\ntitle: $:/core/modules/parsers/wikiparser/rules/wikilink.js\ntype: application/javascript\nmodule-type: wikirule\n\nWiki text inline rule for wiki links. For example:\n\n```\nAWikiLink\nAnotherLink\n~SuppressedLink\n```\n\nPrecede a camel case word with `~` to prevent it from being recognised as a link.\n\n\\*/\n(function(){\n\n/*jslint node: true, browser: true */\n/*global $tw: false */\n\"use strict\";\n\nexports.name = \"wikilink\";\nexports.types = {inline: true};\n\nexports.init = function(parser) {\n\tthis.parser = parser;\n\t// Regexp to match\n\tthis.matchRegExp = new RegExp($tw.config.textPrimitives.unWikiLink + \"?\" + $tw.config.textPrimitives.wikiLink,\"mg\");\n};\n\n/*\nParse the most recent match\n*/\nexports.parse = function() {\n\t// Get the details of the match\n\tvar linkText = this.match[0];\n\t// Move past the macro call\n\tthis.parser.pos = this.matchRegExp.lastIndex;\n\t// If the link starts with the unwikilink character then just output it as plain text\n\tif(linkText.substr(0,1) === $tw.config.textPrimitives.unWikiLink) {\n\t\treturn [{type: \"text\", text: linkText.substr(1)}];\n\t}\n// If the link is on the whitelist then just output is as plain text\nvar dummy = \"$:/sk/WhiteList\"\nvar whitelist=$tw.wiki.getTiddlerText(dummy).split(\",\");\nvar n=whitelist.indexOf(linkText);\n\nif(n>-1) {\n\t\t\treturn [{type: \"text\", text: linkText}];\n}\n\t// If the link has been preceded with a blocked letter then don't treat it as a link\n\tif(this.match.index > 0) {\n\t\tvar preRegExp = new RegExp($tw.config.textPrimitives.blockPrefixLetters,\"mg\");\n\t\tpreRegExp.lastIndex = this.match.index-1;\n\t\tvar preMatch = preRegExp.exec(this.parser.source);\n\t\tif(preMatch && preMatch.index === this.match.index-1) {\n\t\t\treturn [{type: \"text\", text: linkText}];\n\t\t}\n\t}\n\treturn [{\n\t\ttype: \"link\",\n\t\tattributes: {\n\t\t\tto: {type: \"string\", value: linkText}\n\t\t},\n\t\tchildren: [{\n\t\t\ttype: \"text\",\n\t\t\ttext: linkText\n\t\t}]\n\t}];\n};\n\n})();\n",
+            "created": "20150209183326265",
+            "creator": "Stephen",
+            "modified": "20150210183324354",
+            "modifier": "Stephen",
+            "module-type": "wikirule",
+            "tags": "ske",
+            "title": "$:/core/modules/parsers/wikiparser/rules/wikilink.js",
+            "type": "application/javascript"
+        }
+    }
+}

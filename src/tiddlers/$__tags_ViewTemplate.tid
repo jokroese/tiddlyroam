@@ -1,0 +1,5 @@
+created: 20200128153730498
+list: $:/core/ui/ViewTemplate/title $:/core/ui/ViewTemplate/unfold $:/core/ui/ViewTemplate/subtitle $:/core/ui/ViewTemplate/tags $:/core/ui/ViewTemplate/classic $:/core/ui/ViewTemplate/body $:/.giffmex/ViewTemplate/viewfullnotes $:/.giffmex/ViewTemplate/refscontext $:/.giffmex/ViewTemplate/refslinks $:/.giffmex/ViewTemplate/refstranscludecollapse
+modified: 20200304200353810
+tags: tb
+title: $:/tags/ViewTemplate

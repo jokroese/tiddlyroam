@@ -1,0 +1,15 @@
+caption: hide
+created: 20200131144745512
+modified: 20200304194924022
+tags: tb meta
+title: .hideList
+tmap.id: 8be3fcff-a4a5-4531-8fef-bc3b8ffd4a7a
+
+Add the tag `hide` or the tag `outlines` to any tiddler to keep it from appearing in the 'simple transclude' view of the references from other tiddlers. Tiddlers with either tag will appear here.
+
+<<list-search
+"[!is[system]tag[outlines]] [!is[system]tag[hide]] +[sort[title]]"
+"search"
+"$:/temp/list-search-example"
+"$:/core/ui/ListItemTemplate"
+placeholder:"" >>

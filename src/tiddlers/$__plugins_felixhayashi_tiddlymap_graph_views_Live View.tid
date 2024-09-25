@@ -1,0 +1,6 @@
+config.neighbourhood_scope: 1
+config.physics_mode: true
+config.refresh-triggers: $:/temp/tmap/currentTiddler
+config.vis: {"physics":{"forceAtlas2Based":{"springLength":0,"springConstant":0.09}}}
+isview: true
+title: $:/plugins/felixhayashi/tiddlymap/graph/views/Live View

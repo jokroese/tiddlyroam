@@ -1,0 +1,14 @@
+caption: search results in context
+created: 20200102141715979
+modified: 20200401152145043
+tags: tb refs $:/tags/ViewTemplate
+title: $:/.giffmex/ViewTemplate/refscontext
+
+\define mycrit() (?i)\b$(searchspx)$\b
+
+<hr>References: 
+
+<$vars searchme=<<currentTiddler>> searchspx={{{ [<currentTiddler>escaperegexp[]]}}} >
+
+<$list filter="[!is[system]all[current]backlinks[]!tag[outlines]!tag[hide]sort[title]] -[is[current]]"><$link><$view field="title"/></$link><span class="indent1"><$link><span class="graybox"><$context term=<<searchme>> /></span></$link></span></$list>
+</$vars>

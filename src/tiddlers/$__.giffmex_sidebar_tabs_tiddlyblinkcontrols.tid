@@ -1,0 +1,36 @@
+caption: {{$:/core/images/options-button}}
+created: 20200129233103456
+modified: 20200304195335855
+tags: tb $:/tags/SideBar
+title: $:/.giffmex/sidebar/tabs/tiddlyblinkcontrols
+
+\define tagreset() 
+<$list filter="[tag[refs]sort[created]] -[[$(currentTiddler)$]]" variable="removeme">
+<$action-listops  $tiddler=<<removeme>> $tags="+[remove[$:/tags/ViewTemplate]]"/>
+</$list>
+<$action-deletefield dummy/>
+\end
+
+Click the palette icon below to ''select a color palette'' from a dropdown. Default is ~TiddlyBlink. TiddlyWiki default is Vanilla. Note that dark themes may obscure some features.
+
+Click here: {{$:/core/ui/Buttons/palette}}
+
+<hr>
+
+<span class="graybox">
+
+''View references as:''
+
+<$list filter="[tag[refs]sort[created]]">
+<$list filter="[all[current]tag[$:/tags/ViewTemplate]]">
+<$checkbox field=dummy checked="yes" unchecked="yes" default="yes"></$checkbox>
+<$link><$view field="caption"/></$link><br/> 
+</$list>
+<$list filter="[all[current]!tag[$:/tags/ViewTemplate]]">
+<$checkbox tag="$:/tags/ViewTemplate" xinvertTag="yes" checkactions=<<tagreset>>/><$link> <$view field="caption"/></$link><br/> 
+</$list>
+</$list>
+
+<br>Note that the gray boxes in the context and transclude options are links to their respective tiddlers.
+
+</span>

@@ -1,0 +1,15 @@
+caption: Customize TiddlyBlink
+created: 20200127211244101
+modified: 20200304195100291
+tags: tb starthere meta
+title: $:/.giffmex/Customize.TiddlyBlink
+
+*Change the title and subtitle of this file
+**Edit [[$:/SiteTitle]] and [[$:/SiteSubtitle]]
+*Customize the date and time stamp when creating new notes 
+**Open [[$:/config/NewJournal/Title]] and adjust. The guide to formatting dates and times is here: https://tiddlywiki.com/#DateFormat
+**Make changes to the Custom Stylesheet: edit [[$:/.giffmex/.Stylesheet4tiddlyblink]] and/or create a tiddler and tag it `$:/tags/Stylesheet` and choose 'text/css' in the type field.
+*Keep WikiWords (CamelCase words like McDonalds ) from becoming links
+**Add `~` before a wikiword to keep it from becoming a link
+**To add to a word-by-word list of frequent wikiwords that should not be links, add them, comma-separated, to $:/sk/WhiteList
+**Nuclear option: To turn off //all //automatic wikiword linking, open $:/ControlPanel > Settings > uncheck the Camel Case Wiki Links checkbox

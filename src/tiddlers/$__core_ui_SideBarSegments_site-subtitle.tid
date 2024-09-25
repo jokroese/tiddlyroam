@@ -1,0 +1,9 @@
+created: 20200206184214682
+modified: 20200304200105492
+title: $:/core/ui/SideBarSegments/site-subtitle
+
+<div class="tc-site-subtitle">
+
+<$transclude tiddler="$:/SiteSubtitle" mode="inline"/>
+
+</div>

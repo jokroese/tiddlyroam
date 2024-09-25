@@ -1,0 +1,74 @@
+caption: How to add TiddlyBlink to your TiddlyWiki
+created: 20200126155347401
+modified: 20200212223142893
+tags: meta
+title: $:/.giffmex/meta/How.to.add.TiddlyBlink.to.your.TiddlyWiki
+
+To get this experience on your own TiddlyWiki or an empty one, drag these links from here to the other TiddlyWiki.
+
+"""
+ [[.hideList]]
+[[.sourcesList]]
+[[.topicList]]
+[[1. Download and set up TiddlyBlink]]
+[[2. Lightning-fast linking and navigating]]
+[[3. See tiddlers side by side]]
+[[4. Topics, sources and hiding?]]
+[[5. My own notetaking process in TiddlyBlink]]
+[[6. Learn more about TiddlyWiki]]
+[[TiddlyBlink]]
+[[TiddlyBlink home]]
+TiddlyBlinkFoldData
+ $:/.giffmex/.Stylesheet4tiddlyblink
+$:/.giffmex/actions/new-journal
+$:/.giffmex/buttons/newnote-datetime
+$:/.giffmex/Change
+$:/.giffmex/Change.log
+$:/.giffmex/Customize
+$:/.giffmex/Customize.TiddlyBlink
+$:/.giffmex/meta/hack.tiddlyblink
+$:/.giffmex/meta/How
+$:/.giffmex/meta/How.to.add.TiddlyBlink.to.your.TiddlyWiki
+$:/.giffmex/meta/TiddlyBlink
+$:/.giffmex/meta/TiddlyBlink.gears.and.doo-hickeys
+$:/.giffmex/sidebar/parallel
+$:/.giffmex/sidebar/parallel2
+$:/.giffmex/sidebar/tabs/tiddlyblinkcontrols
+$:/.giffmex/ViewTemplate/refscontext
+$:/.giffmex/ViewTemplate/refslinks
+$:/.giffmex/ViewTemplate/refstranscludeclean
+$:/.giffmex/ViewTemplate/refstranscludecollapse
+$:/.giffmex/ViewToolbar/new-note-here
+$:/.giffmex/ViewToolbar/new-note-here-datetime
+$:/.giffmex/viewtoolbar/viewrefs
+$:/.giffmex/ViewToolbar/viewrefscheckboxes 
+$:/.tb/macros/list-search 
+ $:/config/AnimationDuration
+$:/config/EditorTypeMappings/text/vnd.tiddlywiki
+$:/config/NewJournal/Title
+$:/config/RelinkOnRename
+$:/config/ViewToolbarButtons/Visibility/$:/.giffmex/ViewToolbar/viewrefscheckboxes
+$:/config/WikiParserRules/Inline/wikilink 
+ $:/core/ui/Buttons/save
+$:/core/ui/EditTemplate
+ $:/DefaultTiddlers
+$:/fullscreen-editor 
+$:/jd/fullscreen-editor/EditButton
+ $:/plugins/danielo515/context/css
+$:/plugins/danielo515/ContextPlugin
+$:/plugins/danielo515/ContextPlugin/Caption
+$:/plugins/danielo515/ContextPlugin/widgets/context.js
+$:/plugins/flibbles/relink
+$:/plugins/jd/fullscreen-editor
+$:/plugins/sk/WhiteList
+$:/plugins/snowgoon88/edit-comptext
+$:/plugins/snowgoon88/edit-comptext/config
+$:/SiteSubtitle
+$:/SiteTitle
+$:/sk/WhiteList 
+ $:/tags/EditToolbar
+$:/tags/PageControls
+$:/tags/ViewTemplate
+$:/tags/ViewToolbar 
+$:/view
+"""

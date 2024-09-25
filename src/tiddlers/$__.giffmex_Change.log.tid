@@ -1,0 +1,42 @@
+caption: Change log
+created: 20200129233457195
+modified: 20200228212517326
+tags: meta
+title: $:/.giffmex/Change.log
+
+<span class="doublelist">
+
+*''2-28-2020''
+**Thanks to help from Mark S. at the ~TiddlyWiki Google group (and Thomas Elmiger, Mohammad and ~TonyM), the checkboxes for changing the way to view references now work the way I have always wanted them to: choosing one view closes the other views. 
+**Added a TiddlyBlink palette and a palette switcher in the 'gear' tab.
+**Changed tiddlers: $:/.giffmex/sidebar/tabs/tiddlyblinkcontrols, $:/.giffmex/ViewTemplate/refstranscludeclean, $:/.giffmex/ViewTemplate/refstranscludecollapse, $:/.giffmex/ViewToolbar/viewrefscheckboxes.
+
+*''1-29-2020:''
+**Added CSS in $:/.giffmex/.Stylesheet4tiddlyblink for tighter padding around transcluded notes.
+**Added $:/sk/WhiteList so users can add wikiwords they don't want to automatically turn into links
+**Moved the checkboxes for toggling notes as context / transclude / links to the ~TiddlyBlink tab in the sidebar.
+**With the help of ~TonyM and Eric Shulman at the ~TiddlyWiki Google group, I was able to fix a problem with the button at the top of the tiddlers that creates new tiddlers with a date and time stamp for the title. 
+**Improved instructions, including an example file at http://giffmex.org/gifts/tiddlyblinkexample.html
+*''1-30-2020:''
+**Made tiddler titles above transclusions into links, by popular demand.
+*''1-31-2020''
+**With the help fo ~MarkS at the ~TiddlyWiki Google group, I added a new way of viewing references: transclusion with open and close buttons. 
+**Added the home page and more documentation, accessible from the 'Start here' tab.
+*''2-1-2020''
+**Changed .outlinesList to .hideList
+**Added documentation to .hideList, .sourcesList and .topicList
+**Other minor documentation changes (2 and 3)
+**Link to upcoming Spanish version
+**Updated [[$:/.giffmex/meta/How.to.add.TiddlyBlink.to.your.TiddlyWiki]] (the list there will soon be replaced with a plugin!)
+*''2-4-2020''
+**Now when you save a tiddler, any links in that tiddler to non-existent (missing) tiddlers automatically cause the creation of those tiddlers. So you don't need to open the links, click edit, and click save, as before.
+*''2-6-2020''
+**Added the parallel tab in the sidebar ($:/.giffmex/sidebar/parallel) for viewing tiddlers side by side. See [[3. See tiddlers side by side]]. Use by tagging and untagging a tiddler with `parallel`
+**Adjusted relative width of story river and sidebar, and hide sitetitle and sitesubtitle from sidebar, to make room for the parallel tab.
+*''2-7-2020''
+**Replaced yesterday's parallel tab with an even better one! Courtesy of A Gloom from the TiddlyWiki Google group. Now just paste a tiddler title into the parallel tab field, and view the tiddler's contents for side-by-side reading. ($:/.giffmex/sidebar/parallel and $:/.giffmex/sidebar/parallel2)
+**Hid 'meta' tags from References, per suggestion by Mark S at the TiddlyWiki Google group.
+*''2-12-2020''
+**Changed TB so that only linked references appear in the reference section. Added $:/.giffmex/meta/hack.tiddlyblink with instructions on how to put it back in. See $:/.giffmex/ViewTemplate/refscontext, $:/.giffmex/ViewTemplate/refslinks, $:/.giffmex/ViewTemplate/refstranscludeclean,  and $:/.giffmex/ViewTemplate/refstranscludecollapse
+**Made available from the tiddler view toolbar, the checkboxes for showing and hiding references. See the {{$:/core/images/preview-open}} menu at the top of the tiddlers.  $:/.giffmex/viewtoolbar/viewrefs, $:/.giffmex/ViewToolbar/viewrefscheckboxes, and $:/config/ViewToolbarButtons/Visibility/$:/.giffmex/ViewToolbar/viewrefscheckboxes
+</span>

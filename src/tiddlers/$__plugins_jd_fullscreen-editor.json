@@ -1,0 +1,49 @@
+{
+    "tiddlers": {
+        "$:/jd/fullscreen-editor/EditButton": {
+            "text": "\\whitespace trim\n<$navigator story=\"$:/fullscreen-editor\">\n<$button message=\"tm-edit-tiddler\" tooltip=\"Edit in full screen mode\" class=<<tv-config-toolbar-class>>>\n<$list filter=\"[<tv-config-toolbar-icons>prefix[yes]]\">\n{{$:/core/images/full-screen-button}}\n</$list>\n<$list filter=\"[<tv-config-toolbar-text>prefix[yes]]\">\n<span class=\"tc-btn-text\">\n<$text text=\" \"/>\n<$text text=\"edit in full screen\"/>\n</span>\n</$list>\n</$button>\n</$navigator>",
+            "title": "$:/jd/fullscreen-editor/EditButton",
+            "tags": "$:/tags/ViewToolbar",
+            "modifier": "jd",
+            "modified": "20190204134418116",
+            "description": "Edit in full screen mode",
+            "creator": "jd",
+            "created": "20190204123121582",
+            "caption": "{{$:/core/images/full-screen-button}} edit in full screen"
+        },
+        "$:/jd/fullscreen-editor/EditTemplate": {
+            "text": "<$navigator story=\"$:/fullscreen-editor\">\n<$keyboard key=((cancel-edit-tiddler)) message=\"tm-cancel-tiddler\">\n<$keyboard key=((save-tiddler)) actions=\"\"\"<$action-sendmessage $message=\"tm-save-tiddler\"/><$action-sendmessage $message=\"tm-close-tiddler\"/>\"\"\" class=\"fullscreen-story-river\" tag=\"div\">\n{{||$:/core/ui/EditTemplate/controls}}\n{{||$:/core/ui/EditTemplate/body}}\n</$keyboard>\n</$keyboard>\n</$navigator>",
+            "title": "$:/jd/fullscreen-editor/EditTemplate",
+            "modifier": "jd",
+            "modified": "20190204140310285",
+            "creator": "jd",
+            "created": "20190204123536452"
+        },
+        "$:/jd/fullscreen-editor/PageTemplate": {
+            "text": "<$list filter=\"[list[$:/fullscreen-editor]]\" template=\"$:/jd/fullscreen-editor/ViewTemplate\" editTemplate=\"$:/jd/fullscreen-editor/EditTemplate\"/>\n",
+            "title": "$:/jd/fullscreen-editor/PageTemplate",
+            "tags": "$:/tags/PageTemplate",
+            "modifier": "jd",
+            "modified": "20190204135522488",
+            "creator": "jd",
+            "created": "20190204123350692"
+        },
+        "$:/jd/fullscreen-editor/Stylesheet": {
+            "text": "<$list filter=\"[[$:/fullscreen-editor]has:field[list]!field:list[]]\">\n<$list filter=\"[[$:/fullscreen-editor]search:list[draft of]]\">\n\n.tc-story-river {display: none; }\n\n.fullscreen-story-river {\n    background-color: <<colour tiddler-editor-background>>;\n    position: fixed;\n    top: 0;\n    bottom: 0;\n    left: 0;\n    right: 0;\n    display: block;\n    z-index: 2200;\n    overflow-y: auto;\n}\n\n.fullscreen-story-river .tc-tiddler-edit-title {\n    position: sticky;\n    top: 0;\n    background: <<colour page-background>>;\n    display: flex;\n    align-items: center;\n    justify-content: space-between;\n    padding: 0.5em 1em;\n}\n\n.fullscreen-story-river .tc-tiddler-edit-title > div:nth-child(2) {\n    display: none;\n}\n\n.fullscreen-story-river .tc-tiddler-controls.tc-titlebar,\n.fullscreen-story-river .tc-tiddler-controls.tc-titlebar .tc-btn-invisible {\n    display: flex;\n    align-items: center;\n}\n\n.fullscreen-story-river .tc-editor-toolbar {\n    background: <<colour page-background>>;\n    padding: 0.25em 1em;\n    margin: 0;\n}\n\n.fullscreen-story-river  .tc-editor-toolbar button {\n    background: <<colour page-background>>;\n}\n\n.fullscreen-story-river textarea.tc-edit-texteditor {\n    border: none;\n    padding: 1em;\n    background-color: <<colour tiddler-editor-background>>;\n}\n\n<$list filter=\"[[$:/state/showeditpreview]text[yes]]\">\n.fullscreen-story-river iframe.tc-edit-texteditor { width: 49%; }\n</$list>\n\n<$list filter=\"[[$:/state/showeditpreview]!text[yes]]\">\n.fullscreen-story-river iframe.tc-edit-texteditor { width: 100%; }\n</$list>\n\n</$list>\n</$list>",
+            "title": "$:/jd/fullscreen-editor/Stylesheet",
+            "tags": "$:/tags/Stylesheet",
+            "modifier": "jd",
+            "modified": "20190204141756609",
+            "creator": "jd",
+            "created": "20190204124703056"
+        },
+        "$:/jd/fullscreen-editor/readme": {
+            "created": "20190206054820870",
+            "creator": "HC Haase",
+            "text": "With ''~FullscreenEditor'', you'll be able to edit the current tiddler distraction-free with this button, found at the usual tiddler controls: @@font-size:1.5em;{{||$:/jd/fullscreen-editor/EditButton}}@@\n\nAlso in this mode, <kbd>ctrl</kbd>+<kbd>enter</kbd> will save and close the tiddler, and <kbd>esc</kbd> will cancel the edit (or whatever keyboard shortcut have been set for these two actions at $:/core/ui/ControlPanel/KeyboardShortcuts).",
+            "title": "$:/jd/fullscreen-editor/readme",
+            "modifier": "HC Haase",
+            "modified": "20190206054846709"
+        }
+    }
+}

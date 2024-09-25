@@ -1,0 +1,28 @@
+caption: {{$:/core/images/options-button}}
+created: 20200129233103456
+modified: 20200304195517765
+tags: tb $:/tags/ViewToolbar refview
+title: $:/.giffmex/ViewToolbar/viewrefscheckboxes
+
+\define tagreset() 
+<$list filter="[tag[refs]sort[created]] -[[$(currentTiddler)$]]" variable="removeme">
+<$action-listops  $tiddler=<<removeme>> $tags="+[remove[$:/tags/ViewTemplate]]"/>
+</$list>
+<$action-deletefield dummy/>
+\end
+
+<span style="font-size:12pt;">
+
+<span class="graybox">
+
+''View references as:''
+
+<$list filter="[tag[refs]sort[created]]"><$list filter="[all[current]tag[$:/tags/ViewTemplate]]">
+<$checkbox field=dummy checked="yes" unchecked="yes" default="yes"></$checkbox><$link><$view field="caption"/></$link></$list><$list filter="[all[current]!tag[$:/tags/ViewTemplate]]"><$checkbox tag="$:/tags/ViewTemplate" xinvertTag="yes" checkactions=<<tagreset>>/><$link><$view field="caption"/></$link> </$list></$list>
+
+</span>
+
+</span>
+
+
+{{build-and-export}}
